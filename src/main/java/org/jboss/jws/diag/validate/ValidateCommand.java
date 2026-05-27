@@ -2,8 +2,13 @@ package org.jboss.jws.diag.validate;
 
 import org.jboss.jws.diag.common.ExitCodes;
 import org.jboss.jws.diag.common.OutputFormatMixin;
+import org.jboss.jws.diag.common.SeverityLevels;
+import org.jboss.jws.diag.validate.model.Finding;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Command(name = "validate",
         description = "Run diagnostic rules against configuration and report findings (INFO/WARN/ERROR)",
@@ -15,7 +20,23 @@ public class ValidateCommand implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("jws-diag validate: not yet implemented");
-        System.exit(ExitCodes.OK);
+        List<Finding> findings = new ArrayList<>();
+
+        int exitCode = determineExitCode(findings);
+        System.exit(exitCode);
+    }
+
+    public int determineExitCode(List<Finding> findings) {
+        int highestCode = ExitCodes.OK;
+
+        for (Finding finding : findings) {
+            if (finding.getSeverity() == SeverityLevels.ERROR) {
+                return ExitCodes.ERRORS;
+            } else if (finding.getSeverity() == SeverityLevels.WARN) {
+                return  ExitCodes.WARNINGS;
+            }
+        }
+
+        return highestCode;
     }
 }
