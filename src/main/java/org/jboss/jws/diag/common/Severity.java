@@ -1,6 +1,6 @@
 package org.jboss.jws.diag.common;
 
-public enum SeverityLevels {
+public enum Severity {
     ERROR,
     WARN,
     INFO
