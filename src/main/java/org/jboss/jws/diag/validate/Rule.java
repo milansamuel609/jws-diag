@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface Rule {
 
-    List<Finding> evaluate();
+    List<Finding> evaluate(RuleContext context);
 }

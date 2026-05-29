@@ -2,7 +2,7 @@ package org.jboss.jws.diag.validate;
 
 import org.jboss.jws.diag.common.ExitCodes;
 import org.jboss.jws.diag.common.OutputFormatMixin;
-import org.jboss.jws.diag.common.SeverityLevels;
+import org.jboss.jws.diag.common.Severity;
 import org.jboss.jws.diag.validate.model.Finding;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
@@ -30,10 +30,10 @@ public class ValidateCommand implements Runnable {
         int highestCode = ExitCodes.OK;
 
         for (Finding finding : findings) {
-            if (finding.getSeverity() == SeverityLevels.ERROR) {
-                return ExitCodes.ERRORS;
-            } else if (finding.getSeverity() == SeverityLevels.WARN) {
-                return  ExitCodes.WARNINGS;
+            if (finding.getSeverity() == Severity.ERROR) {
+                highestCode = ExitCodes.ERRORS;
+            } else if (finding.getSeverity() == Severity.WARN && highestCode < ExitCodes.ERRORS) {
+                highestCode = ExitCodes.WARNINGS;
             }
         }
 

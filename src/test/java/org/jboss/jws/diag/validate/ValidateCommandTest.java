@@ -1,10 +1,11 @@
 package org.jboss.jws.diag.validate;
 
 import org.jboss.jws.diag.common.ExitCodes;
-import org.jboss.jws.diag.common.SeverityLevels;
+import org.jboss.jws.diag.common.Severity;
 
 import org.jboss.jws.diag.validate.model.Finding;
 import org.junit.jupiter.api.Test;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -22,24 +23,217 @@ public class ValidateCommandTest {
 
     @Test
     void shouldReturnWarningWhenFindingsContainOnlyWarnings() {
-        List<Finding> warningFindings = List.of(
-                new Finding("CONN-001", "Connector", SeverityLevels.WARN, "Low threads check", "Compares maxThreads against available CPU cores rather than using a rigid static number"
-                , "server.xml", "Adjust maxThreads upward to match your host hardware specifications.")
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("SEC-004")
+                        .category("Security")
+                        .severity(Severity.WARN)
+                        .summary("Version Banner Exposure Check")
+                        .detail("Checks if <Connector> elements expose server metadata, or if an <ErrorInfoValve> is missing inside the <Host> or <Engine> blocks to suppress versions on error pages")
+                        .file("server.xml")
+                        .fix("Configure an <ErrorInfoValve> with showReport=\"false\" and showServerInfo=\"false\" inside your Host block")
+                        .build()
         );
 
-        int result = validateCommand.determineExitCode(warningFindings);
+        int result = validateCommand.determineExitCode(findings);
         assertThat(result).isEqualTo(ExitCodes.WARNINGS);
     }
 
     @Test
-    void shouldReturnErrorWhenAnyFindingsHasError() {
-        List<Finding> errorFindings = List.of(
-                new Finding("SEC-001", "Security", SeverityLevels.ERROR, "Root user check"
-                , "Checks if the Tomcat process is running as root (UID 0)", "process state"
-                        , "Run Tomcat as a dedicated, non-root system user.")
+    void shouldReturnErrorWhenFindingsContainsOnlyErrors() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("SEC-001")
+                        .category("Security")
+                        .severity(Severity.ERROR)
+                        .summary("Root User Check")
+                        .detail("Checks if the Tomcat process is running as root (UID 0)")
+                        .file("Process State")
+                        .fix("Run Tomcat as a dedicated, non-root system user")
+                        .build()
         );
 
-        int result = validateCommand.determineExitCode(errorFindings);
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.ERRORS);
+    }
+
+    @Test
+    void shouldReturnErrorWhenFindingsContainWarnAndError() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("SEC-004")
+                        .category("Security")
+                        .severity(Severity.WARN)
+                        .summary("Version Banner Exposure Check")
+                        .detail("Checks if <Connector> elements expose server metadata, or if an <ErrorInfoValve> is missing inside the <Host> or <Engine> blocks to suppress versions on error pages")
+                        .file("server.xml")
+                        .fix("Configure an <ErrorInfoValve> with showReport=\"false\" and showServerInfo=\"false\" inside your Host block")
+                        .build(),
+                Finding.builder()
+                        .ruleId("SEC-001")
+                        .category("Security")
+                        .severity(Severity.ERROR)
+                        .summary("Root User Check")
+                        .detail("Checks if the Tomcat process is running as root (UID 0)")
+                        .file("Process State")
+                        .fix("Run Tomcat as a dedicated, non-root system user")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.ERRORS);
+    }
+
+    @Test
+    void shouldReturnErrorWhenFindingsContainErrorAndWarn() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("SEC-001")
+                        .category("Security")
+                        .severity(Severity.ERROR)
+                        .summary("Root User Check")
+                        .detail("Checks if the Tomcat process is running as root (UID 0)")
+                        .file("Process State")
+                        .fix("Run Tomcat as a dedicated, non-root system user")
+                        .build(),
+                Finding.builder()
+                        .ruleId("SEC-004")
+                        .category("Security")
+                        .severity(Severity.WARN)
+                        .summary("Version Banner Exposure Check")
+                        .detail("Checks if <Connector> elements expose server metadata, or if an <ErrorInfoValve> is missing inside the <Host> or <Engine> blocks to suppress versions on error pages")
+                        .file("server.xml")
+                        .fix("Configure an <ErrorInfoValve> with showReport=\"false\" and showServerInfo=\"false\" inside your Host block")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.ERRORS);
+    }
+
+    @Test
+    void shouldReturnOkWhenFindingsContainOnlyInfo() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("CONN-004")
+                        .category("Connector")
+                        .severity(Severity.INFO)
+                        .summary("Missing Redirect Port")
+                        .detail("Inspects whether standard HTTP connectors omit the redirectPort attribute.")
+                        .file("server.xml")
+                        .fix("Add redirectPort=\"8443\" to allow automatic HTTPS redirection fields.")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.OK);
+    }
+
+    @Test
+    void shouldReturnWarningWhenFindingsContainInfoAndWarn() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("CONN-004")
+                        .category("Connector")
+                        .severity(Severity.INFO)
+                        .summary("Missing Redirect Port")
+                        .detail("Inspects whether standard HTTP connectors omit the redirectPort attribute.")
+                        .file("server.xml")
+                        .fix("Add redirectPort=\"8443\" to allow automatic HTTPS redirection fields.")
+                        .build(),
+                Finding.builder()
+                        .ruleId("SEC-004")
+                        .category("Security")
+                        .severity(Severity.WARN)
+                        .summary("Version Banner Exposure Check")
+                        .detail("Checks if <Connector> elements expose server metadata, or if an <ErrorInfoValve> is missing inside the <Host> or <Engine> blocks to suppress versions on error pages")
+                        .file("server.xml")
+                        .fix("Configure an <ErrorInfoValve> with showReport=\"false\" and showServerInfo=\"false\" inside your Host block")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.WARNINGS);
+    }
+
+    @Test
+    void shouldReturnWarningWhenFindingsContainWarnAndInfo() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("SEC-004")
+                        .category("Security")
+                        .severity(Severity.WARN)
+                        .summary("Version Banner Exposure Check")
+                        .detail("Checks if <Connector> elements expose server metadata, or if an <ErrorInfoValve> is missing inside the <Host> or <Engine> blocks to suppress versions on error pages")
+                        .file("server.xml")
+                        .fix("Configure an <ErrorInfoValve> with showReport=\"false\" and showServerInfo=\"false\" inside your Host block")
+                        .build(),
+                Finding.builder()
+                        .ruleId("CONN-004")
+                        .category("Connector")
+                        .severity(Severity.INFO)
+                        .summary("Missing Redirect Port")
+                        .detail("Inspects whether standard HTTP connectors omit the redirectPort attribute.")
+                        .file("server.xml")
+                        .fix("Add redirectPort=\"8443\" to allow automatic HTTPS redirection fields.")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.WARNINGS);
+    }
+
+    @Test
+    void shouldReturnErrorWhenFindingsContainInfoAndError() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("CONN-004")
+                        .category("Connector")
+                        .severity(Severity.INFO)
+                        .summary("Missing Redirect Port")
+                        .detail("Inspects whether standard HTTP connectors omit the redirectPort attribute.")
+                        .file("server.xml")
+                        .fix("Add redirectPort=\"8443\" to allow automatic HTTPS redirection fields.")
+                        .build(),
+                Finding.builder()
+                        .ruleId("SEC-001")
+                        .category("Security")
+                        .severity(Severity.ERROR)
+                        .summary("Root User Check")
+                        .detail("Checks if the Tomcat process is running as root (UID 0)")
+                        .file("Process State")
+                        .fix("Run Tomcat as a dedicated, non-root system user")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.ERRORS);
+    }
+
+    @Test
+    void shouldReturnErrorWhenFindingsContainErrorAndInfo() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId("SEC-001")
+                        .category("Security")
+                        .severity(Severity.ERROR)
+                        .summary("Root User Check")
+                        .detail("Checks if the Tomcat process is running as root (UID 0)")
+                        .file("Process State")
+                        .fix("Run Tomcat as a dedicated, non-root system user")
+                        .build(),
+                Finding.builder()
+                        .ruleId("CONN-004")
+                        .category("Connector")
+                        .severity(Severity.INFO)
+                        .summary("Missing Redirect Port")
+                        .detail("Inspects whether standard HTTP connectors omit the redirectPort attribute.")
+                        .file("server.xml")
+                        .fix("Add redirectPort=\"8443\" to allow automatic HTTPS redirection fields.")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
         assertThat(result).isEqualTo(ExitCodes.ERRORS);
     }
 }
