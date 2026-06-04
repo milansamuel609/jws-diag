@@ -30,7 +30,7 @@ public class ValidateCommand implements Runnable {
 
     @Override
     public void run() {
-        RuleContext ctx = RuleContext.from(catalinaBase);
+        RuleContext ctx = RuleContext.fromDisk(catalinaBase);
 
         List<Finding> findings = new ArrayList<>();
         for (Rule rule : rules) {
