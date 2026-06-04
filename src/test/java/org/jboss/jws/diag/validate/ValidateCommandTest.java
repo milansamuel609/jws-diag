@@ -197,7 +197,7 @@ public class ValidateCommandTest {
                         .fix("Add redirectPort=\"8443\" to allow automatic HTTPS redirection fields.")
                         .build(),
                 Finding.builder()
-                        .ruleId(RuleId.CONN_004)
+                        .ruleId(RuleId.SEC_001)
                         .category("Security")
                         .severity(Severity.ERROR)
                         .summary("Root User Check")
@@ -215,7 +215,7 @@ public class ValidateCommandTest {
     void shouldReturnErrorWhenFindingsContainErrorAndInfo() {
         List<Finding> findings = List.of(
                 Finding.builder()
-                        .ruleId(RuleId.SEC_004)
+                        .ruleId(RuleId.SEC_001)
                         .category("Security")
                         .severity(Severity.ERROR)
                         .summary("Root User Check")

@@ -1,5 +1,7 @@
 package org.jboss.jws.diag.common;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum RuleId {
     SEC_001("SEC-001"),
     SEC_002("SEC-002"),
@@ -13,6 +15,7 @@ public enum RuleId {
     TLS_003("TLS-003"),
     TLS_004("TLS-004"),
     TLS_005("TLS-005"),
+    TLS_006("TLS-006"),
 
     CONN_001("CONN-001"),
     CONN_002("CONN-002"),
@@ -26,6 +29,7 @@ public enum RuleId {
         this.id = id;
     }
 
+    @JsonValue
     public String getId() {
         return id;
     }
