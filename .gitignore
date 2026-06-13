@@ -42,3 +42,6 @@ dependency-reduced-pom.xml
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local test directory for manual jar testing
+catalina-base/

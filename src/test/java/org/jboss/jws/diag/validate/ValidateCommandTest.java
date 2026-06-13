@@ -86,6 +86,33 @@ public class ValidateCommandTest {
     }
 
     @Test
+    void shouldReturnErrorWhenFindingsContainErrorAndWarn() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId(RuleId.SEC_001)
+                        .category("Security")
+                        .severity(Severity.ERROR)
+                        .summary("Root User Check")
+                        .detail("Checks if the Tomcat process is running as root (UID 0)")
+                        .file("Process State")
+                        .fix("Run Tomcat as a dedicated, non-root system user")
+                        .build(),
+                Finding.builder()
+                        .ruleId(RuleId.SEC_004)
+                        .category("Security")
+                        .severity(Severity.WARN)
+                        .summary("Version Banner Exposure Check")
+                        .detail("Checks if <Connector> elements expose server metadata, or if an <ErrorInfoValve> is missing inside the <Host> or <Engine> blocks to suppress versions on error pages")
+                        .file("server.xml")
+                        .fix("Configure an <ErrorInfoValve> with showReport=\"false\" and showServerInfo=\"false\" inside your Host block")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.ERRORS);
+    }
+
+    @Test
     void shouldReturnOkWhenFindingsContainOnlyInfo() {
         List<Finding> findings = List.of(
                 Finding.builder()
@@ -131,6 +158,33 @@ public class ValidateCommandTest {
     }
 
     @Test
+    void shouldReturnWarningWhenFindingsContainWarnAndInfo() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId(RuleId.SEC_004)
+                        .category("Security")
+                        .severity(Severity.WARN)
+                        .summary("Version Banner Exposure Check")
+                        .detail("Checks if <Connector> elements expose server metadata, or if an <ErrorInfoValve> is missing inside the <Host> or <Engine> blocks to suppress versions on error pages")
+                        .file("server.xml")
+                        .fix("Configure an <ErrorInfoValve> with showReport=\"false\" and showServerInfo=\"false\" inside your Host block")
+                        .build(),
+                Finding.builder()
+                        .ruleId(RuleId.SEC_006)
+                        .category("Security")
+                        .severity(Severity.INFO)
+                        .summary("Localhost Binding")
+                        .detail("Checks if the connector address attribute is restricted to localhost (127.0.0.1)")
+                        .file("server.xml")
+                        .fix("If you want the server accessible to the public, change address to 0.0.0.0")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.WARNINGS);
+    }
+
+    @Test
     void shouldReturnErrorWhenFindingsContainInfoAndError() {
         List<Finding> findings = List.of(
                 Finding.builder()
@@ -150,6 +204,33 @@ public class ValidateCommandTest {
                         .detail("Checks if the Tomcat process is running as root (UID 0)")
                         .file("Process State")
                         .fix("Run Tomcat as a dedicated, non-root system user")
+                        .build()
+        );
+
+        int result = validateCommand.determineExitCode(findings);
+        assertThat(result).isEqualTo(ExitCodes.ERRORS);
+    }
+
+    @Test
+    void shouldReturnErrorWhenFindingsContainErrorAndInfo() {
+        List<Finding> findings = List.of(
+                Finding.builder()
+                        .ruleId(RuleId.SEC_001)
+                        .category("Security")
+                        .severity(Severity.ERROR)
+                        .summary("Root User Check")
+                        .detail("Checks if the Tomcat process is running as root (UID 0)")
+                        .file("Process State")
+                        .fix("Run Tomcat as a dedicated, non-root system user")
+                        .build(),
+                Finding.builder()
+                        .ruleId(RuleId.SEC_006)
+                        .category("Security")
+                        .severity(Severity.INFO)
+                        .summary("Localhost Binding")
+                        .detail("Checks if the connector address attribute is restricted to localhost (127.0.0.1)")
+                        .file("server.xml")
+                        .fix("If you want the server accessible to the public, change address to 0.0.0.0")
                         .build()
         );
 
