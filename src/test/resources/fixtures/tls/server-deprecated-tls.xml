@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="-1" shutdown="SHUTDOWN">
+    <Service name="Catalina">
+        <Connector port="8443"
+                   protocol="org.apache.coyote.http11.Http11NioProtocol"
+                   SSLEnabled="true"
+                   secure="true">
+            <SSLHostConfig sslEnabledProtocols="SSLv2,SSLv3,TLSv1,TLSv1.1">
+                <Certificate certificateKeystoreFile="conf/localhost-rsa.jks"
+                             type="RSA" />
+            </SSLHostConfig>
+        </Connector>
+    </Service>
+</Server>
