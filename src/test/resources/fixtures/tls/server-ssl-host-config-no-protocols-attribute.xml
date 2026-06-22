@@ -5,7 +5,7 @@
         <Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
                    maxThreads="150" SSLEnabled="true" secure="true">
 
-            <SSLHostConfig sslEnabledProtocols="TLSv1,TLSv1.1,TLSv1.2">
+            <SSLHostConfig>
                 <Certificate certificateKeystoreFile="conf/localhost-rsa.jks"
                              certificateKeystorePassword="changeit" type="RSA" />
             </SSLHostConfig>

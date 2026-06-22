@@ -4,12 +4,12 @@
 
         <Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
                    maxThreads="150" SSLEnabled="true" secure="true">
+            <SSLHostConfig sslEnabledProtocols="TLSv1.2,TLSv1.3" />
+        </Connector>
 
-            <SSLHostConfig sslEnabledProtocols="TLSv1,TLSv1.1,TLSv1.2">
-                <Certificate certificateKeystoreFile="conf/localhost-rsa.jks"
-                             certificateKeystorePassword="changeit" type="RSA" />
-            </SSLHostConfig>
-
+        <Connector port="8444" protocol="org.apache.coyote.http11.Http11NioProtocol"
+                   maxThreads="150" SSLEnabled="true" secure="true">
+            <SSLHostConfig sslEnabledProtocols="TLSv1.1,TLSv1.2" />
         </Connector>
 
         <Engine name="Catalina" defaultHost="localhost">

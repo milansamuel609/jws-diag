@@ -34,7 +34,7 @@ public class DeprecatedProtocolsTest {
     }
 
     @Test
-    void shouldFlagWhenDeprecatedProtocolsArePresent() throws Exception {
+    void shouldFlagWhenDeprecatedProtocolsArePresentViaSslEnabledProtocols() throws Exception {
         Document serverXml = parseFixture("/fixtures/tls/server-deprecated-tls.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testUser");
 
@@ -43,6 +43,42 @@ public class DeprecatedProtocolsTest {
         assertThat(findings).hasSize(1);
         assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.TLS_001);
         assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.WARN);
+        assertThat(findings.get(0).getDetail()).contains("TLSv1");
+        assertThat(findings.get(0).getDetail()).contains("TLSv1.1");
+    }
+
+    @Test
+    void shouldFlagWhenDeprecatedProtocolsArePresentViaProtocolsAttribute() throws Exception {
+        Document serverXml = parseFixture("/fixtures/tls/server-deprecated-tls-openssl.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testUser");
+
+        List<Finding> findings = rule.evaluate(ctx);
+
+        assertThat(findings).hasSize(1);
+        assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.TLS_001);
+        assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.WARN);
+        assertThat(findings.get(0).getDetail()).contains("SSLv3");
+    }
+
+    @Test
+    void shouldFlagMultipleSslHostConfigsWithMixedProtocols() throws Exception {
+        Document serverXml = parseFixture("/fixtures/tls/server-multiple-ssl-host-configs.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testUser");
+
+        List<Finding> findings = rule.evaluate(ctx);
+
+        assertThat(findings).hasSize(1);
+        assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.TLS_001);
+        assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.WARN);
+        assertThat(findings.get(0).getDetail()).contains("TLSv1.1");
+    }
+
+    @Test
+    void shouldPassWhenSslHostConfigHasNoProtocolsAttribute() throws Exception {
+        Document serverXml = parseFixture("/fixtures/tls/server-ssl-host-config-no-protocols-attribute.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testUser");
+
+        assertThat(rule.evaluate(ctx)).isEmpty();
     }
 
     @Test
