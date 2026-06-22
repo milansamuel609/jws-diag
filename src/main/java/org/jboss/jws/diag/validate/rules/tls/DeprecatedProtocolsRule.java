@@ -19,6 +19,10 @@ public class DeprecatedProtocolsRule implements Rule {
             "SSLv2", "SSLv3", "TLSv1", "TLSv1.1"
     );
 
+    private static final List<String> ATTRIBUTE_NAMES = List.of(
+            "sslEnabledProtocols", "protocols"
+    );
+
     @Override
     public List<Finding> evaluate(RuleContext ctx) {
         Document doc = ctx.getServerXml();
@@ -27,25 +31,27 @@ public class DeprecatedProtocolsRule implements Rule {
             return List.of();
         }
 
-        NodeList sslHostConfigs  = doc.getElementsByTagName("SSLHostConfig");
+        NodeList sslHostConfigs = doc.getElementsByTagName("SSLHostConfig");
         List<Finding> findings = new ArrayList<>();
 
         for (int i = 0; i < sslHostConfigs.getLength(); i++) {
-            Node sslHostConfig =  sslHostConfigs.item(i);
-
-            Node protocolsAttribute = sslHostConfig.getAttributes().getNamedItem("sslEnabledProtocols");
-
-            if (protocolsAttribute == null) {
-                continue;
-            }
-
-            String[] protocols = protocolsAttribute.getNodeValue().split(",");
-
+            Node sslHostConfig = sslHostConfigs.item(i);
             List<String> foundDeprecated = new ArrayList<>();
 
-            for (String protocol : protocols) {
-                if (DEPRECATED_PROTOCOLS.contains(protocol.trim())) {
-                    foundDeprecated.add(protocol.trim());
+            for (String attributeName : ATTRIBUTE_NAMES) {
+                Node protocolsAttribute = sslHostConfig.getAttributes().getNamedItem(attributeName);
+
+                if (protocolsAttribute == null) {
+                    continue;
+                }
+
+                String[] protocols = protocolsAttribute.getNodeValue().split(",");
+
+                for (String protocol : protocols) {
+                    String trimmed = protocol.trim();
+                    if (DEPRECATED_PROTOCOLS.contains(trimmed) && !foundDeprecated.contains(trimmed)) {
+                        foundDeprecated.add(trimmed);
+                    }
                 }
             }
 
