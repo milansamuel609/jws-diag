@@ -48,6 +48,20 @@ public class CertificateExpiryTest {
     }
 
     @Test
+    void shouldFlagWhenMultipleCertificatesAreExpired() throws Exception {
+        Path catalinaBase = Path.of("src/test/resources/fixtures/tls/keystores");
+        Document serverXml = parseFixture("/fixtures/tls/server-cert-expired-multi.xml");
+        RuleContext ctx = new RuleContext(catalinaBase, serverXml, null, "testuser");
+
+        List<Finding> findings = rule.evaluate(ctx);
+
+        assertThat(findings).hasSize(2);
+        assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.TLS_002);
+        assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.ERROR);
+        assertThat(findings.get(0).getDetail()).contains("expired");
+    }
+
+    @Test
     void shouldFlagWhenKeystoreFileDoesNotExist() throws Exception {
         Path catalinaBase = Path.of("src/test/resources/fixtures/tls/keystores");
         Document serverXml = parseFixture("/fixtures/tls/server-cert-keystore-missing.xml");
@@ -79,6 +93,20 @@ public class CertificateExpiryTest {
         List<Finding> findings = rule.evaluate(ctx);
 
         assertThat(findings).hasSize(1);
+        assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.TLS_002);
+        assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.ERROR);
+        assertThat(findings.get(0).getDetail()).contains("expired");
+    }
+
+    @Test
+    void shouldFlagWhenMultiplePkcs12CertificatesAreExpired() throws Exception {
+        Path catalinaBase = Path.of("src/test/resources/fixtures/tls/keystores");
+        Document serverXml = parseFixture("/fixtures/tls/server-cert-expired-multi-pkcs12.xml");
+        RuleContext ctx = new RuleContext(catalinaBase, serverXml, null, "testuser");
+
+        List<Finding> findings = rule.evaluate(ctx);
+
+        assertThat(findings).hasSize(2);
         assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.TLS_002);
         assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.ERROR);
         assertThat(findings.get(0).getDetail()).contains("expired");

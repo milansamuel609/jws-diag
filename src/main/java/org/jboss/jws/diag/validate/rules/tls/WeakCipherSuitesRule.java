@@ -15,14 +15,10 @@ import java.util.List;
 public class WeakCipherSuitesRule implements Rule{
 
     private static final List<String> WEAK_KEYWORDS = List.of(
-            "RC4", "DES", "NULL", "EXPORT", "EXP", "MD5", "anon", "CBC"
+            "RC4", "DES", "NULL", "EXPORT", "EXP", "MD5", "anon"
     );
 
     private boolean isWeakCipher(String cipher) {
-        if (cipher == null || cipher.isBlank()) {
-            return true;
-        }
-
         String upper = cipher.trim().toUpperCase();
 
         for (String keyword : WEAK_KEYWORDS) {
@@ -31,11 +27,11 @@ public class WeakCipherSuitesRule implements Rule{
             }
         }
 
-        if (upper.contains("SHA") && !upper.matches(".*SHA\\d{3,}.*")) {
-            return true;
-        }
+        return upper.contains("SHA") && !upper.matches(".*SHA\\d{3,}.*");
+    }
 
-        return false;
+    private boolean isCbcCipher(String cipher) {
+        return cipher != null && cipher.trim().toUpperCase().contains("CBC");
     }
 
     @Override
@@ -60,10 +56,17 @@ public class WeakCipherSuitesRule implements Rule{
 
             String[] cipherList = cipherAttr.getNodeValue().split(",");
             List<String> weakFound = new ArrayList<>();
+            List<String> cbcFound = new ArrayList<>();
 
             for (String cipher : cipherList) {
-                if (isWeakCipher(cipher)) {
-                    weakFound.add(cipher.trim());
+                String trimmed =  cipher.trim();
+
+                if (trimmed.isEmpty()) continue;
+
+                if (isWeakCipher(trimmed)) {
+                    weakFound.add(trimmed);
+                } else if (isCbcCipher(trimmed)) {
+                    cbcFound.add(trimmed);
                 }
             }
 
@@ -76,6 +79,18 @@ public class WeakCipherSuitesRule implements Rule{
                         .detail("Weak ciphers detected: " + String.join(", ", weakFound))
                         .file("server.xml")
                         .fix("Configure the connector to use strong cipher suites like AES-GCM")
+                        .build());
+            }
+
+            if (!cbcFound.isEmpty()) {
+                findings.add(Finding.builder()
+                        .ruleId(RuleId.TLS_006)
+                        .category("TLS")
+                        .severity(Severity.INFO)
+                        .summary("Weak Cipher Suites")
+                        .detail("CBC cipher suites detected: " + String.join(", ", cbcFound))
+                        .file("server.xml")
+                        .fix("Consider upgrading to GCM-based cipher suites like AES-GCM")
                         .build());
             }
         }

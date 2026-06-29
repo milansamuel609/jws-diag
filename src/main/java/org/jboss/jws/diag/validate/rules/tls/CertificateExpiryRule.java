@@ -9,14 +9,17 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 
 public class CertificateExpiryRule implements Rule {
@@ -59,30 +62,35 @@ public class CertificateExpiryRule implements Rule {
 
             try {
                 KeyStore keyStore = KeyStore.getInstance(keystoreType);
-                try (FileInputStream fis = new FileInputStream(keystorePath.toFile())) {
-                    keyStore.load(fis, keystorePassword.toCharArray());
+
+                try (var is = Files.newInputStream(keystorePath)) {
+                    keyStore.load(is, keystorePassword.toCharArray());
                 }
 
-                String alias = keyStore.aliases().nextElement();
-                Certificate cert = keyStore.getCertificate(alias);
+                Enumeration<String> aliases = keyStore.aliases();
+                while (aliases.hasMoreElements()) {
+                    String alias = aliases.nextElement();
+                    Certificate cert = keyStore.getCertificate(alias);
 
-                if (cert instanceof X509Certificate) {
-                    X509Certificate x509Certificate = (X509Certificate) cert;
-                    Date expiryDate = x509Certificate.getNotAfter();
+                    if (cert instanceof X509Certificate) {
+                        X509Certificate x509Certificate = (X509Certificate) cert;
+                        Date expiryDate = x509Certificate.getNotAfter();
 
-                    if (expiryDate.before(new Date())) {
-                        findings.add(Finding.builder()
-                                .ruleId(RuleId.TLS_002)
-                                .category("TLS")
-                                .severity(Severity.ERROR)
-                                .summary("Certificate Expiry")
-                                .detail("Certificate in " + keystoreFile + " expired on " + expiryDate)
-                                .file(keystoreFile)
-                                .fix("Renew and install a valid SSL/TLS certificate immediately")
-                                .build());
+                        if (expiryDate.before(new Date())) {
+                            findings.add(Finding.builder()
+                                    .ruleId(RuleId.TLS_002)
+                                    .category("TLS")
+                                    .severity(Severity.ERROR)
+                                    .summary("Certificate Expiry")
+                                    .detail("Certificate in " + keystoreFile + " expired on " + expiryDate)
+                                    .file(keystoreFile)
+                                    .fix("Renew and install a valid SSL/TLS certificate immediately")
+                                    .build());
+                        }
                     }
                 }
-            } catch (Exception e) {
+
+            } catch (GeneralSecurityException | IOException e) {
                 findings.add(Finding.builder()
                         .ruleId(RuleId.TLS_002)
                         .category("TLS")
