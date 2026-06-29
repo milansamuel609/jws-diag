@@ -55,6 +55,19 @@ public class WeakCipherSuitesTest {
     }
 
     @Test
+    void shouldInfoWhenCbcCiphersArePresent() throws Exception {
+        Document serverXml = parseFixture("/fixtures/tls/server-cbc-ciphers.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
+
+        List<Finding> findings = rule.evaluate(ctx);
+
+        assertThat(findings).hasSize(1);
+        assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.TLS_006);
+        assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.INFO);
+        assertThat(findings.get(0).getDetail()).contains("CBC cipher suites detected");
+    }
+
+    @Test
     void shouldPassWhenServerXmlIsNull() {
         RuleContext ctx = new RuleContext(Path.of("/dummy"), null, null, "testuser");
 
