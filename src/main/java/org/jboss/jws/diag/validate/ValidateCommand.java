@@ -12,7 +12,12 @@ import org.jboss.jws.diag.validate.rules.security.ShutdownPortConfigRule;
 import org.jboss.jws.diag.validate.rules.security.ErrorValveRule;
 import org.jboss.jws.diag.validate.rules.security.TraceEnabledRule;
 import org.jboss.jws.diag.validate.rules.security.LocalhostBindingRule;
-import org.jboss.jws.diag.validate.rules.tls.*;
+import org.jboss.jws.diag.validate.rules.tls.DeprecatedProtocolsRule;
+import org.jboss.jws.diag.validate.rules.tls.CertificateExpiryRule;
+import org.jboss.jws.diag.validate.rules.tls.BadKeystorePathRule;
+import org.jboss.jws.diag.validate.rules.tls.MissingSecureFlagRule;
+import org.jboss.jws.diag.validate.rules.tls.MissingSslHostConfigRule;
+import org.jboss.jws.diag.validate.rules.tls.WeakCipherSuitesRule;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;

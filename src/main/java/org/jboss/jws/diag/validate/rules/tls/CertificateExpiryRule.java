@@ -40,7 +40,7 @@ public class CertificateExpiryRule implements Rule {
 
             Node keystoreFileAttr = certNode.getAttributes().getNamedItem("certificateKeystoreFile");
             Node keystorePasswordAttr = certNode.getAttributes().getNamedItem("certificateKeystorePassword");
-            Node keystoreTypeAttr = certNode.getAttributes().getNamedItem("keystoreType");
+            Node keystoreTypeAttr = certNode.getAttributes().getNamedItem("certificateKeystoreType");
 
             if (keystoreFileAttr == null) {
                 continue;
@@ -50,18 +50,18 @@ public class CertificateExpiryRule implements Rule {
             String keystorePassword = keystorePasswordAttr != null ?
                     keystorePasswordAttr.getNodeValue() : "";
 
-            String keystoreType;
+            String certificateKeystoreType;
             if (keystoreTypeAttr != null) {
-                keystoreType = keystoreTypeAttr.getNodeValue().toUpperCase();
+                certificateKeystoreType = keystoreTypeAttr.getNodeValue().toUpperCase();
             } else {
                 String lower = keystoreFile.toLowerCase();
-                keystoreType = (lower.endsWith(".p12") || lower.endsWith(".pfx")) ? "PKCS12" : "JKS";
+                certificateKeystoreType = (lower.endsWith(".p12") || lower.endsWith(".pfx")) ? "PKCS12" : "JKS";
             }
 
             Path keystorePath = ctx.getCatalinaBase().resolve(keystoreFile);
 
             try {
-                KeyStore keyStore = KeyStore.getInstance(keystoreType);
+                KeyStore keyStore = KeyStore.getInstance(certificateKeystoreType);
 
                 try (var is = Files.newInputStream(keystorePath)) {
                     keyStore.load(is, keystorePassword.toCharArray());
