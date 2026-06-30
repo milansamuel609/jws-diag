@@ -12,7 +12,7 @@ import org.w3c.dom.NodeList;
 import java.util.List;
 import java.util.ArrayList;
 
-public class MissingSecureFlagRule implements Rule{
+public class MissingSecureFlagRule implements Rule {
 
     @Override
     public List<Finding> evaluate(RuleContext ctx) {
