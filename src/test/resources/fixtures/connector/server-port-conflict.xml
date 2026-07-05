@@ -8,12 +8,12 @@
                    allowTrace="false"
                    address="127.0.0.1" />
 
-        <Connector port="8081"
-                   proxyName="www.mycompany.com"
-                   proxyPort="80"
-                   address="127.0.0.1" />
+        <Connector protocol="AJP/1.3"
+                   address="::1"
+                   port="8009"
+                   redirectPort="8443" />
 
-        <Connector port="8443"
+        <Connector port="8080"
                    protocol="org.apache.coyote.http11.Http11NioProtocol"
                    maxThreads="150"
                    SSLEnabled="true"
@@ -27,17 +27,6 @@
             </SSLHostConfig>
 
         </Connector>
-
-        <Engine name="Catalina" defaultHost="localhost">
-            <Host name="localhost" appBase="webapps"
-                  unpackWARs="true" autoDeploy="true">
-                <Valve className="org.apache.catalina.valves.AccessLogValve"
-                       directory="logs" prefix="localhost_access_log"
-                       suffix=".txt" pattern="%h %l %u %t &quot;%r&quot; %s %b" />
-                <Valve className="org.apache.catalina.valves.ErrorReportValve"
-                       showReport="false" showServerInfo="false" />
-            </Host>
-        </Engine>
 
     </Service>
 </Server>
