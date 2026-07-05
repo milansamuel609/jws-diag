@@ -15,7 +15,13 @@ public enum RuleId {
     TLS_003("TLS-003"),
     TLS_004("TLS-004"),
     TLS_005("TLS-005"),
-    TLS_006("TLS-006");
+    TLS_006("TLS-006"),
+
+    CONN_001("CONN-001"),
+    CONN_002("CONN-002"),
+    CONN_003("CONN-003"),
+    CONN_004("CONN-004"),
+    CONN_005("CONN-005");
 
     private final String id;
 

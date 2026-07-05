@@ -18,6 +18,11 @@ import org.jboss.jws.diag.validate.rules.tls.BadKeystorePathRule;
 import org.jboss.jws.diag.validate.rules.tls.MissingSecureFlagRule;
 import org.jboss.jws.diag.validate.rules.tls.MissingSslHostConfigRule;
 import org.jboss.jws.diag.validate.rules.tls.WeakCipherSuitesRule;
+import org.jboss.jws.diag.validate.rules.connector.LowThreadsCheckRule;
+import org.jboss.jws.diag.validate.rules.connector.PortConflictRule;
+import org.jboss.jws.diag.validate.rules.connector.ProxyMismatchRule;
+import org.jboss.jws.diag.validate.rules.connector.MissingRedirectPortRule;
+import org.jboss.jws.diag.validate.rules.connector.ObsoleteAprConnectorRule;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -50,7 +55,12 @@ public class ValidateCommand implements Runnable {
             new BadKeystorePathRule(),
             new MissingSecureFlagRule(),
             new MissingSslHostConfigRule(),
-            new WeakCipherSuitesRule()
+            new WeakCipherSuitesRule(),
+            new LowThreadsCheckRule(),
+            new PortConflictRule(),
+            new ProxyMismatchRule(),
+            new MissingRedirectPortRule(),
+            new ObsoleteAprConnectorRule()
     );
 
     @Override
