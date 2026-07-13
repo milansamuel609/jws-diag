@@ -27,7 +27,7 @@ public class ProxyMismatchTest {
 
     @Test
     void shouldPassWhenBothAttributesAreDefined() throws Exception {
-        Document serverXml = parseFixture("/fixtures/security/server-clean.xml");
+        Document serverXml = parseFixture("/fixtures/connector/server-proxy-pass.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
 
         assertThat(rule.evaluate(ctx)).isEmpty();

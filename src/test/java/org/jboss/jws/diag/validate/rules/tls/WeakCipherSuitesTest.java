@@ -35,7 +35,7 @@ public class WeakCipherSuitesTest {
 
     @Test
     void shouldPassWhenNoCipherAttributesArePresent() throws Exception {
-        Document serverXml = parseFixture("/fixtures/security/server-clean.xml");
+        Document serverXml = parseFixture("/fixtures/tls/server-weak-cipher-suites-pass.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
 
         assertThat(rule.evaluate(ctx)).isEmpty();
