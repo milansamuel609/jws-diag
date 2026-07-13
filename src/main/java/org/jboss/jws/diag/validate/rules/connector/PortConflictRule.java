@@ -10,7 +10,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PortConflictRule implements Rule {
 
@@ -25,8 +27,8 @@ public class PortConflictRule implements Rule {
         NodeList connectors = doc.getElementsByTagName("Connector");
         List<Finding> findings = new ArrayList<>();
 
-        List<String> seenPorts = new ArrayList<>();
-        List<String> duplicatePorts = new ArrayList<>();
+        Set<Integer> seenPorts = new HashSet<>();
+        Set<Integer> duplicatePorts = new HashSet<>();
 
         for (int i = 0; i < connectors.getLength(); i++) {
             Node connector = connectors.item(i);
@@ -34,18 +36,20 @@ public class PortConflictRule implements Rule {
 
             if (portAttr == null) continue;
 
-            String port = portAttr.getNodeValue();
+            int port;
 
-            if (seenPorts.contains(port)) {
-                if (!duplicatePorts.contains(port)) {
-                    duplicatePorts.add(port);
-                }
-            } else {
-                seenPorts.add(port);
+            try {
+                port = Integer.parseInt(portAttr.getNodeValue().trim());
+            } catch (NumberFormatException e) {
+                continue;
+            }
+
+            if (!seenPorts.add(port)) {
+                duplicatePorts.add(port);
             }
         }
 
-        for (String port : duplicatePorts) {
+        for (Integer port : duplicatePorts) {
             findings.add(Finding.builder()
                     .ruleId(RuleId.CONN_002)
                     .category("Connector")

@@ -34,8 +34,21 @@ public class ObsoleteAprConnectorTest {
     }
 
     @Test
-    void shouldFlagWhenAprProtocolExists() throws Exception {
+    void shouldFlagWhenHttp11AprProtocolExists() throws Exception {
         Document serverXml = parseFixture("/fixtures/connector/server-apr-connector.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
+
+        List<Finding> findings = rule.evaluate(ctx);
+
+        assertThat(findings).hasSize(1);
+        assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.CONN_005);
+        assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.WARN);
+        assertThat(findings.get(0).getDetail()).contains("is obsolete");
+    }
+
+    @Test
+    void shouldFlagWhenAjpAprProtocolExists() throws Exception {
+        Document serverXml = parseFixture("/fixtures/connector/server-ajp-apr-connector.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
 
         List<Finding> findings = rule.evaluate(ctx);

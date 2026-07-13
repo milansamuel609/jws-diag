@@ -28,11 +28,13 @@ public class MissingRedirectPortRule implements Rule {
         for (int i = 0; i < connectors.getLength(); i++) {
             Node connector = connectors.item(i);
             Node redirectPortAttr = connector.getAttributes().getNamedItem("redirectPort");
+            Node sslAttr = connector.getAttributes().getNamedItem("SSLEnabled");
 
             String redirectPort = (redirectPortAttr != null) ? redirectPortAttr.getNodeValue() : null;
             boolean redirectPortPresent = redirectPort != null && !redirectPort.trim().isEmpty();
+            boolean sslEnabled = sslAttr != null && "true".equalsIgnoreCase(sslAttr.getNodeValue());
 
-            if (!redirectPortPresent) {
+            if (!redirectPortPresent && !sslEnabled) {
                 findings.add(Finding.builder()
                         .ruleId(RuleId.CONN_004)
                         .category("Connector")
