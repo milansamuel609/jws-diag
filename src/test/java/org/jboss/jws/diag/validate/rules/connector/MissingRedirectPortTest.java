@@ -60,6 +60,14 @@ public class MissingRedirectPortTest {
     }
 
     @Test
+    void shouldFlagWhenSslEnabledAndRedirectPortIsMissing() throws Exception {
+        Document serverXml = parseFixture("/fixtures/connector/server-ssl-no-redirect-port.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
+
+        assertThat(rule.evaluate(ctx)).isEmpty();
+    }
+
+    @Test
     void shouldPassWhenServerXmlIsNull() {
         RuleContext ctx = new RuleContext(Path.of("/dummy"), null, null, "testuser");
 

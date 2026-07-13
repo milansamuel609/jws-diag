@@ -15,6 +15,8 @@ import java.util.function.IntSupplier;
 
 public class LowThreadsCheckRule implements Rule {
 
+    private static final int THREADS_PER_CORE_THRESHOLD = 25;
+
     private final IntSupplier availableCoresSupplier;
 
     public LowThreadsCheckRule() {
@@ -36,6 +38,7 @@ public class LowThreadsCheckRule implements Rule {
         NodeList connectors = doc.getElementsByTagName("Connector");
         List<Finding> findings = new ArrayList<>();
         int availableCores = availableCoresSupplier.getAsInt();
+        int minRecommendedThreads = availableCores * THREADS_PER_CORE_THRESHOLD;
 
         for (int i = 0; i < connectors.getLength(); i++) {
             Node connector = connectors.item(i);
@@ -45,13 +48,14 @@ public class LowThreadsCheckRule implements Rule {
                 try {
                     int maxThreads = Integer.parseInt(maxThreadAttr.getNodeValue());
 
-                    if (maxThreads < availableCores) {
+                    if (maxThreads < minRecommendedThreads) {
                         findings.add(Finding.builder()
                                 .ruleId(RuleId.CONN_001)
                                 .category("Connector")
                                 .severity(Severity.WARN)
                                 .summary("Low Threads Check")
-                                .detail("The maxThreads value (" + maxThreads + ") is less than the available CPU cores (" + availableCores + ").")
+                                .detail("The maxThreads value (" + maxThreads + ") is less than the recommended minimum ("
+                                        + minRecommendedThreads + ") for " + availableCores + " available CPU cores.")
                                 .file("server.xml")
                                 .fix("Adjust maxThreads upward to match your host hardware specifications")
                                 .build());

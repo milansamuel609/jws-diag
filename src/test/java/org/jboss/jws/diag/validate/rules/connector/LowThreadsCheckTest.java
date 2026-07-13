@@ -26,7 +26,7 @@ public class LowThreadsCheckTest {
     }
 
     @Test
-    void shouldPassWhenMaxThreadsMeetsOrExceedsAvailableCores() throws Exception {
+    void shouldPassWhenMaxThreadsMeetsOrExceedsRecommendedMinimum() throws Exception {
         Document serverXml = parseFixture("/fixtures/connector/server-pass-max-threads.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
 
@@ -34,7 +34,7 @@ public class LowThreadsCheckTest {
     }
 
     @Test
-    void shouldFlagWhenMaxThreadsIsLessThanAvailableCores() throws Exception {
+    void shouldFlagWhenMaxThreadsIsLessThanRecommendedMinimum() throws Exception {
         Document serverXml = parseFixture("/fixtures/connector/server-low-max-threads.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
 
@@ -43,7 +43,7 @@ public class LowThreadsCheckTest {
         assertThat(findings).hasSize(1);
         assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.CONN_001);
         assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.WARN);
-        assertThat(findings.get(0).getDetail()).contains("less than the available CPU cores");
+        assertThat(findings.get(0).getDetail()).contains("less than the recommended minimum");
     }
 
     @Test

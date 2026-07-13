@@ -11,10 +11,14 @@ import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ObsoleteAprConnectorRule implements Rule {
 
-    private static final String APR_CONN = "org.apache.coyote.http11.Http11AprProtocol";
+    private static final Set<String> APR_PROTOCOLS = Set.of(
+            "org.apache.coyote.http11.Http11AprProtocol",
+            "org.apache.coyote.ajp.AjpAprProtocol"
+    );
 
     @Override
     public List<Finding> evaluate(RuleContext ctx) {
@@ -35,7 +39,7 @@ public class ObsoleteAprConnectorRule implements Rule {
 
             String protocol = protocolAttr.getNodeValue();
 
-            if (APR_CONN.equals(protocol)) {
+            if (APR_PROTOCOLS.contains(protocol)) {
                 findings.add(Finding.builder()
                         .ruleId(RuleId.CONN_005)
                         .category("Connector")

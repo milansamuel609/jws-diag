@@ -47,6 +47,17 @@ public class PortConflictTest {
     }
 
     @Test
+    void shouldFlagWhenSamePortHasDifferentZeroPadding() throws Exception {
+        Document serverXml = parseFixture("/fixtures/connector/server-port-conflict-zero-padded.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
+
+        List<Finding> findings = rule.evaluate(ctx);
+
+        assertThat(findings).hasSize(1);
+        assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.CONN_002);
+    }
+
+    @Test
     void shouldPassWhenServerXmlIsNull() {
         RuleContext ctx = new RuleContext(Path.of("/dummy"), null, null, "testuser");
 
