@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="-1" shutdown="SHUTDOWN">
+    <Service name="Catalina">
+
+        <Connector port="8081"
+                   proxyName="www.mycompany.com"
+                   proxyPort="80"
+                   address="127.0.0.1" />
+
+        <Engine name="Catalina" defaultHost="localhost">
+            <Host name="localhost" appBase="webapps"
+                  unpackWARs="true" autoDeploy="true">
+            </Host>
+        </Engine>
+
+    </Service>
+</Server>

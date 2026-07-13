@@ -27,7 +27,7 @@ public class ObsoleteAprConnectorTest {
 
     @Test
     void shouldPassWhenAprProtocolIsNotFound() throws Exception {
-        Document serverXml = parseFixture("/fixtures/security/server-clean.xml");
+        Document serverXml = parseFixture("/fixtures/connector/server-obsolete-apr-pass.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
 
         assertThat(rule.evaluate(ctx)).isEmpty();

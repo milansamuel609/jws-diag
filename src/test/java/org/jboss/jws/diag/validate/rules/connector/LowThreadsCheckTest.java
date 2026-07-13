@@ -34,6 +34,14 @@ public class LowThreadsCheckTest {
     }
 
     @Test
+    void shouldPassWhenMaxThreadsExactlyEqualsRecommendedMinimum() throws Exception {
+        Document serverXml = parseFixture("/fixtures/connector/server-max-threads-boundary.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
+
+        assertThat(rule.evaluate(ctx)).isEmpty();
+    }
+
+    @Test
     void shouldFlagWhenMaxThreadsIsLessThanRecommendedMinimum() throws Exception {
         Document serverXml = parseFixture("/fixtures/connector/server-low-max-threads.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");

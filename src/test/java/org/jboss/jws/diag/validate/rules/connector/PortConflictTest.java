@@ -27,7 +27,7 @@ public class PortConflictTest {
 
     @Test
     void shouldPassWhenAllConnectorPortsAreUnique() throws Exception {
-        Document serverXml = parseFixture("/fixtures/security/server-clean.xml");
+        Document serverXml = parseFixture("/fixtures/connector/server-port-conflict-pass.xml ");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
 
         assertThat(rule.evaluate(ctx)).isEmpty();
