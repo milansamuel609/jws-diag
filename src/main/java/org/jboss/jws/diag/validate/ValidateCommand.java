@@ -37,7 +37,7 @@ import java.util.List;
         mixinStandardHelpOptions = true)
 public class ValidateCommand implements Runnable {
 
-    @CommandLine.Parameters(index = "0", description = "Path to CATALINA_BASE directory")
+    @CommandLine.Option(names = "--catalina-base", description = "Path to CATALINA_BASE (defaults to $CATALINA_BASE env var)")
     private Path catalinaBase;
 
     @Mixin
