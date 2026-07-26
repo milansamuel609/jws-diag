@@ -49,12 +49,14 @@ public final class ManifestGenerator {
         return MAPPER.writer(PRINTER).writeValueAsString(manifest);
     }
 
-    public void writeToStagingDir(BundleContext context) throws IOException {
+    public String writeToStagingDir(BundleContext context) throws IOException {
         Map<String, Object> manifest = buildManifest(context);
         String json = toJson(manifest);
 
         Path destination = context.getStagingDir().resolve("manifest.json");
         Files.writeString(destination, json, StandardCharsets.UTF_8);
+
+        return (String) manifest.get("bundleTimestamp");
     }
 
     private String resolveJavaVersion() {

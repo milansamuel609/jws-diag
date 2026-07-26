@@ -1,6 +1,7 @@
 package org.jboss.jws.diag.bundle;
 
 import org.jboss.jws.diag.common.RedactionLevel;
+import org.jboss.jws.diag.bundle.redact.IpAddressRedactor;
 import org.jboss.jws.diag.bundle.redact.XmlAttributeRedactor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class BundleEngineTest {
 
     private static final String MASK = XmlAttributeRedactor.MASK;
+    private static final String IP_MASK = IpAddressRedactor.MASK;
 
     private final BundleEngine engine = new BundleEngine();
 
@@ -37,12 +39,8 @@ public class BundleEngineTest {
         String stagedServerXml = Files.readString(stagingDir.resolve("conf/server.xml"), StandardCharsets.UTF_8);
         String stagedUsersXml = Files.readString(stagingDir.resolve("conf/tomcat-users.xml"), StandardCharsets.UTF_8);
 
-        assertThat(stagedServerXml)
-                .contains(MASK)
-                .doesNotContain("secret123");
-        assertThat(stagedUsersXml)
-                .contains(MASK)
-                .doesNotContain("changeit");
+        assertThat(stagedServerXml).contains(MASK).doesNotContain("secret123");
+        assertThat(stagedUsersXml).contains(MASK).doesNotContain("changeit");
     }
 
     @Test
@@ -55,9 +53,55 @@ public class BundleEngineTest {
 
         String stagedServerXml = Files.readString(stagingDir.resolve("conf/server.xml"), StandardCharsets.UTF_8);
 
-        assertThat(stagedServerXml)
-                .contains("port=\"8080\"")
-                .contains("address=\"127.0.0.1\"");
+        assertThat(stagedServerXml).contains("port=\"8080\"");
+    }
+
+    @Test
+    void shouldNotRedactIpAddressesAtDefaultLevel(@TempDir Path catalinaBase, @TempDir Path stagingDir) throws IOException {
+        writeConfFile(catalinaBase, "server.xml", "<Connector address=\"10.0.0.5\"/>");
+
+        BundleContext context = new BundleContext(catalinaBase, catalinaBase, stagingDir, RedactionLevel.DEFAULT);
+        engine.run(context);
+
+        String staged = Files.readString(stagingDir.resolve("conf/server.xml"), StandardCharsets.UTF_8);
+
+        assertThat(staged).contains("10.0.0.5");
+    }
+
+    @Test
+    void shouldRedactIpAddressesAtStrictLevel(@TempDir Path catalinaBase, @TempDir Path stagingDir) throws IOException {
+        writeConfFile(catalinaBase, "server.xml", "<Connector address=\"10.0.0.5\"/>");
+
+        BundleContext context = new BundleContext(catalinaBase, catalinaBase, stagingDir, RedactionLevel.STRICT);
+        engine.run(context);
+
+        String staged = Files.readString(stagingDir.resolve("conf/server.xml"), StandardCharsets.UTF_8);
+
+        assertThat(staged).contains(IP_MASK).doesNotContain("10.0.0.5");
+    }
+
+    @Test
+    void shouldStillRedactPasswordsAtStrictLevel(@TempDir Path catalinaBase, @TempDir Path stagingDir) throws IOException {
+        writeConfFile(catalinaBase, "server.xml", "<Connector connectionPassword=\"secret123\"/>");
+
+        BundleContext context = new BundleContext(catalinaBase, catalinaBase, stagingDir, RedactionLevel.STRICT);
+        engine.run(context);
+
+        String staged = Files.readString(stagingDir.resolve("conf/server.xml"), StandardCharsets.UTF_8);
+
+        assertThat(staged).contains(MASK).doesNotContain("secret123");
+    }
+
+    @Test
+    void shouldStagePropertiesFileWithSensitiveKeyRedacted(@TempDir Path catalinaBase, @TempDir Path stagingDir) throws IOException {
+        writeConfFile(catalinaBase, "catalina.properties", "some.password=changeit\nsome.other.key=fine");
+
+        BundleContext context = new BundleContext(catalinaBase, catalinaBase, stagingDir, RedactionLevel.DEFAULT);
+        engine.run(context);
+
+        String staged = Files.readString(stagingDir.resolve("conf/catalina.properties"), StandardCharsets.UTF_8);
+
+        assertThat(staged).contains(MASK).contains("some.other.key=fine").doesNotContain("changeit");
     }
 
     @Test

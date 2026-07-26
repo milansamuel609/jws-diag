@@ -6,30 +6,13 @@ import org.jboss.jws.diag.common.Severity;
 import org.jboss.jws.diag.validate.model.Finding;
 import org.jboss.jws.diag.validate.output.HumanReadableOutput;
 import org.jboss.jws.diag.validate.output.JsonOutput;
-import org.jboss.jws.diag.validate.rules.security.RootUserCheckRule;
-import org.jboss.jws.diag.validate.rules.security.UserDefaultCredentialsRule;
-import org.jboss.jws.diag.validate.rules.security.ShutdownPortConfigRule;
-import org.jboss.jws.diag.validate.rules.security.ErrorValveRule;
-import org.jboss.jws.diag.validate.rules.security.TraceEnabledRule;
-import org.jboss.jws.diag.validate.rules.security.LocalhostBindingRule;
-import org.jboss.jws.diag.validate.rules.tls.DeprecatedProtocolsRule;
-import org.jboss.jws.diag.validate.rules.tls.CertificateExpiryRule;
-import org.jboss.jws.diag.validate.rules.tls.BadKeystorePathRule;
-import org.jboss.jws.diag.validate.rules.tls.MissingSecureFlagRule;
-import org.jboss.jws.diag.validate.rules.tls.MissingSslHostConfigRule;
-import org.jboss.jws.diag.validate.rules.tls.WeakCipherSuitesRule;
-import org.jboss.jws.diag.validate.rules.connector.LowThreadsCheckRule;
-import org.jboss.jws.diag.validate.rules.connector.PortConflictRule;
-import org.jboss.jws.diag.validate.rules.connector.ProxyMismatchRule;
-import org.jboss.jws.diag.validate.rules.connector.MissingRedirectPortRule;
-import org.jboss.jws.diag.validate.rules.connector.ObsoleteAprConnectorRule;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Command(name = "validate",
@@ -43,34 +26,14 @@ public class ValidateCommand implements Runnable {
     @Mixin
     private OutputFormatMixin outputFormat;
 
-    private final List<Rule> rules = List.of(
-            new RootUserCheckRule(),
-            new UserDefaultCredentialsRule(),
-            new ShutdownPortConfigRule(),
-            new ErrorValveRule(),
-            new TraceEnabledRule(),
-            new LocalhostBindingRule(),
-            new DeprecatedProtocolsRule(),
-            new CertificateExpiryRule(),
-            new BadKeystorePathRule(),
-            new MissingSecureFlagRule(),
-            new MissingSslHostConfigRule(),
-            new WeakCipherSuitesRule(),
-            new LowThreadsCheckRule(),
-            new PortConflictRule(),
-            new ProxyMismatchRule(),
-            new MissingRedirectPortRule(),
-            new ObsoleteAprConnectorRule()
-    );
-
     @Override
     public void run() {
-        RuleContext ctx = RuleContext.fromDisk(catalinaBase);
+        Path resolvedCatalinaBase = resolveCatalinaBase();
 
-        List<Finding> findings = new ArrayList<>();
-        for (Rule rule : rules) {
-            findings.addAll(rule.evaluate(ctx));
-        }
+        ValidationEngine validationEngine = new ValidationEngine();
+
+        List<Finding> findings =
+                validationEngine.validate(resolvedCatalinaBase);
 
         int exitCode = determineExitCode(findings);
 
@@ -84,6 +47,21 @@ public class ValidateCommand implements Runnable {
         }
 
         System.exit(exitCode);
+    }
+
+    private Path resolveCatalinaBase() {
+        if (catalinaBase != null) {
+            return catalinaBase;
+        }
+
+        String envValue = System.getenv("CATALINA_BASE");
+        if (envValue == null || envValue.isBlank()) {
+            System.err.println("[ERROR] Could not determine CATALINA_BASE. "
+                    + "Use --catalina-base, or set the CATALINA_BASE environment variable.");
+            System.exit(ExitCodes.ERRORS);
+        }
+
+        return Paths.get(envValue);
     }
 
     public int determineExitCode(List<Finding> findings) {

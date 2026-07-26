@@ -29,17 +29,20 @@ public class FileCollectorTest {
     }
 
     @Test
-    void shouldCollectAllFourConfFilesWhenAllExist(@TempDir Path catalinaBase) throws IOException {
+    void shouldCollectAllFiveConfFilesWhenAllExist(@TempDir Path catalinaBase) throws IOException {
         writeConfFile(catalinaBase, "server.xml", "<Server/>");
         writeConfFile(catalinaBase, "web.xml", "<web-app/>");
+        writeConfFile(catalinaBase, "context.xml", "<Context/>");
         writeConfFile(catalinaBase, "tomcat-users.xml", "<tomcat-users/>");
+        writeConfFile(catalinaBase, "catalina.properties", "key=value");
 
         List<CollectedFile> files = collector.collectConfFiles(contextFor(catalinaBase));
 
-        assertThat(files).hasSize(3);
+        assertThat(files).hasSize(5);
         assertThat(files).extracting(CollectedFile::getRelativeArchivePath)
                 .containsExactlyInAnyOrder(
-                        "conf/server.xml", "conf/web.xml", "conf/tomcat-users.xml");
+                        "conf/server.xml", "conf/web.xml", "conf/context.xml",
+                        "conf/tomcat-users.xml", "conf/catalina.properties");
     }
 
     @Test
@@ -75,13 +78,23 @@ public class FileCollectorTest {
     }
 
     @Test
-    void shouldTagAllCollectedFilesAsXmlConfigType(@TempDir Path catalinaBase) throws IOException {
+    void shouldTagXmlFilesAsXmlConfigType(@TempDir Path catalinaBase) throws IOException {
         writeConfFile(catalinaBase, "server.xml", "<Server/>");
         writeConfFile(catalinaBase, "tomcat-users.xml", "<tomcat-users/>");
 
         List<CollectedFile> files = collector.collectConfFiles(contextFor(catalinaBase));
 
         assertThat(files).allMatch(f -> f.getType() == CollectedFile.Type.XML_CONFIG);
+    }
+
+    @Test
+    void shouldTagCatalinaPropertiesAsPropertiesType(@TempDir Path catalinaBase) throws IOException {
+        writeConfFile(catalinaBase, "catalina.properties", "key=value");
+
+        List<CollectedFile> files = collector.collectConfFiles(contextFor(catalinaBase));
+
+        assertThat(files).hasSize(1);
+        assertThat(files.get(0).getType()).isEqualTo(CollectedFile.Type.PROPERTIES);
     }
 
     @Test
