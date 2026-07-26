@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,9 +29,15 @@ public class BundleCommandTest {
         BundleCommand command = new BundleCommand();
         new CommandLine(command).parseArgs(
                 "--catalina-base", catalinaBase.toString(),
-                "--staging-dir", stagingDir.toString());
+                "--staging-dir", stagingDir.toString(),
+                "--output-dir", stagingDir.toString());
 
         int exitCode = command.execute();
+
+        try (Stream<Path> files = Files.list(stagingDir)) {
+            assertThat(files)
+                    .anyMatch(path -> path.getFileName().toString().endsWith(".tar.gz"));
+        }
 
         assertThat(exitCode).isEqualTo(ExitCodes.OK);
     }
@@ -52,7 +59,8 @@ public class BundleCommandTest {
         BundleCommand command = new BundleCommand();
         new CommandLine(command).parseArgs(
                 "--catalina-base", catalinaBase.toString(),
-                "--staging-dir", stagingDir.toString());
+                "--staging-dir", stagingDir.toString(),
+                "--output-dir", stagingDir.toString());
 
         command.execute();
 

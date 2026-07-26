@@ -148,4 +148,32 @@ public class XmlAttributeRedactorTest {
         assertThat(file.isRedacted()).isFalse();
         assertThat(file.getContent()).contains("changeit");
     }
+
+    @Test
+    void shouldRedactBareKeystorePassAttribute() throws IOException {
+        CollectedFile file = CollectedFile.builder()
+                .relativeArchivePath("conf/server.xml")
+                .sourcePath(Path.of("conf/server.xml"))
+                .type(CollectedFile.Type.XML_CONFIG)
+                .content("<Certificate keystorePass=\"changeit\"/>")
+                .build();
+
+        CollectedFile result = redactor.redact(file, dummyContext);
+
+        assertThat(result.getContent()).contains("keystorePass=\"" + MASK + "\"").doesNotContain("changeit");
+    }
+
+    @Test
+    void shouldNotRedactAttributesThatMerelyContainPassSubstring() throws IOException {
+        CollectedFile file = CollectedFile.builder()
+                .relativeArchivePath("conf/server.xml")
+                .sourcePath(Path.of("conf/server.xml"))
+                .type(CollectedFile.Type.XML_CONFIG)
+                .content("<Valve allowBypass=\"true\"/>")
+                .build();
+
+        CollectedFile result = redactor.redact(file, dummyContext);
+
+        assertThat(result.getContent()).contains("allowBypass=\"true\"");
+    }
 }
