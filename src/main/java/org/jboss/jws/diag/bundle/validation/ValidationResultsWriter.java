@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.jboss.jws.diag.bundle.BundleContext;
-import org.jboss.jws.diag.common.ExitCodes;
 import org.jboss.jws.diag.common.Severity;
+import org.jboss.jws.diag.validate.ExitCodeCalculator;
 import org.jboss.jws.diag.validate.ValidationEngine;
 import org.jboss.jws.diag.validate.model.Finding;
 
@@ -41,7 +41,7 @@ public final class ValidationResultsWriter {
         List<Finding> findings =
                 validationEngine.validate(context.getCatalinaBase());
 
-        int exitCode = determineExitCode(findings);
+        int exitCode = ExitCodeCalculator.determineExitCode(findings);
 
         long errors = findings.stream()
                 .filter(f -> f.getSeverity() == Severity.ERROR)
@@ -71,20 +71,5 @@ public final class ValidationResultsWriter {
                 .resolve("validation-results.json");
 
         Files.writeString(destination, json, StandardCharsets.UTF_8);
-    }
-
-    private int determineExitCode(List<Finding> findings) {
-        int highestCode = ExitCodes.OK;
-
-        for (Finding finding : findings) {
-            if (finding.getSeverity() == Severity.ERROR) {
-                highestCode = ExitCodes.ERRORS;
-            } else if (finding.getSeverity() == Severity.WARN
-                    && highestCode < ExitCodes.ERRORS) {
-                highestCode = ExitCodes.WARNINGS;
-            }
-        }
-
-        return highestCode;
     }
 }

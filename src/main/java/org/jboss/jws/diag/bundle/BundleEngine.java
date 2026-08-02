@@ -3,13 +3,8 @@ package org.jboss.jws.diag.bundle;
 import org.jboss.jws.diag.bundle.collect.FileCollector;
 import org.jboss.jws.diag.bundle.model.CollectedFile;
 import org.jboss.jws.diag.bundle.output.StagingWriter;
-import org.jboss.jws.diag.bundle.redact.IpAddressRedactor;
-import org.jboss.jws.diag.bundle.redact.HostnameRedactor;
-import org.jboss.jws.diag.bundle.redact.EnvironmentVariableRedactor;
-import org.jboss.jws.diag.bundle.redact.PropertiesRedactor;
-import org.jboss.jws.diag.bundle.redact.RedactionException;
-import org.jboss.jws.diag.bundle.redact.Redactor;
-import org.jboss.jws.diag.bundle.redact.XmlAttributeRedactor;
+import org.jboss.jws.diag.bundle.redact.*;
+import org.jboss.jws.diag.bundle.collect.LogCollector;
 import org.jboss.jws.diag.common.RedactionLevel;
 
 import java.io.IOException;
@@ -19,15 +14,21 @@ import java.util.List;
 public class BundleEngine {
 
     private final FileCollector fileCollector;
+    private final LogCollector logCollector;
     private final StagingWriter stagingWriter;
 
     public BundleEngine() {
         this.fileCollector = new FileCollector();
+        this.logCollector = new LogCollector();
         this.stagingWriter = new StagingWriter();
     }
 
     public void run(BundleContext context) throws IOException {
-        List<CollectedFile> files = fileCollector.collectConfFiles(context);
+        List<CollectedFile> files = new ArrayList<>();
+
+        files.addAll(fileCollector.collectConfFiles(context));
+        files.addAll(logCollector.collectLogFiles(context));
+
         List<Redactor> redactors = buildRedactorChain(context.getRedactionLevel());
 
         for (CollectedFile file : files) {
@@ -47,6 +48,7 @@ public class BundleEngine {
         List<Redactor> chain = new ArrayList<>();
         chain.add(new XmlAttributeRedactor());
         chain.add(new PropertiesRedactor());
+        chain.add(new LogRedactor());
 
         if (level == RedactionLevel.STRICT) {
             chain.add(new IpAddressRedactor());

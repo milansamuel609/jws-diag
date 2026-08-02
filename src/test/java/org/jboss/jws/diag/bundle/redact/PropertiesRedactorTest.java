@@ -19,6 +19,12 @@ public class PropertiesRedactorTest {
     private final BundleContext dummyContext = new BundleContext(
             Paths.get("/dummy"), Paths.get("/dummy"), Paths.get("/dummy-staging"), RedactionLevel.DEFAULT);
 
+    private final BundleContext strictContext = new BundleContext(
+            Paths.get("/dummy"),
+            Paths.get("/dummy"),
+            Paths.get("/dummy-staging"),
+            RedactionLevel.STRICT);
+
     private CollectedFile propertiesFile(String content) {
         return CollectedFile.builder()
                 .relativeArchivePath("conf/catalina.properties")
@@ -100,5 +106,49 @@ public class PropertiesRedactorTest {
         CollectedFile result = redactor.redact(file, dummyContext);
 
         assertThat(result.isRedacted()).isTrue();
+    }
+
+    @Test
+    void shouldRedactIpAddressInStrictMode() {
+        CollectedFile file = propertiesFile("server.ip=192.168.10.25");
+
+        CollectedFile result = redactor.redact(file, strictContext);
+
+        assertThat(result.getContent())
+                .isEqualTo("server.ip=" + MASK);
+    }
+
+    @Test
+    void shouldRedactHostnameInStrictMode() {
+        CollectedFile file = propertiesFile("proxy.host=prod.company.internal");
+
+        CollectedFile result = redactor.redact(file, strictContext);
+
+        assertThat(result.getContent())
+                .isEqualTo("proxy.host=" + MASK);
+    }
+
+    @Test
+    void shouldRedactEnvironmentVariableInStrictMode() {
+        CollectedFile file = propertiesFile("jwt.secret=${JWT_SECRET}");
+
+        CollectedFile result = redactor.redact(file, strictContext);
+
+        assertThat(result.getContent())
+                .isEqualTo("jwt.secret=" + MASK);
+    }
+
+    @Test
+    void shouldPreserveTomcatEnvironmentVariablesInStrictMode() {
+        CollectedFile file = propertiesFile(
+                "tomcat.home=${catalina.home}\n" +
+                        "tomcat.base=${catalina.base}");
+
+        CollectedFile result = redactor.redact(file, strictContext);
+
+        assertThat(result.getContent())
+                .isEqualTo(
+                        "tomcat.home=${catalina.home}\n" +
+                                "tomcat.base=${catalina.base}");
     }
 }

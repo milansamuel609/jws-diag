@@ -46,14 +46,11 @@ public final class HostnameRedactor implements Redactor {
 
                 String attributeName = attribute.getNodeName();
 
-                if ("proxyName".equals(attributeName)) {
-                    attribute.setNodeValue(MASK);
-                } else if ("defaultHost".equals(attributeName)) {
-                    String attributeValue = attribute.getNodeValue();
+                if ("proxyName".equals(attributeName)
+                        || "defaultHost".equals(attributeName)) {
 
-                    if (!"localhost".equalsIgnoreCase(attributeValue)) {
-                        attribute.setNodeValue(MASK);
-                    }
+                    attribute.setNodeValue(
+                            HostnameMasker.mask(attribute.getNodeValue(), MASK));
                 }
             }
         }
@@ -64,19 +61,14 @@ public final class HostnameRedactor implements Redactor {
         }
 
         if ("Host".equals(localName) && element.hasAttribute("name")) {
-            String value = element.getAttribute("name");
-
-            if (!"localhost".equalsIgnoreCase(value)) {
-                element.setAttribute("name", MASK);
-            }
+            element.setAttribute(
+                    "name",
+                    HostnameMasker.mask(element.getAttribute("name"), MASK));
         }
 
         if ("Alias".equals(localName)) {
-            String value = element.getTextContent();
-
-            if (value != null && !value.isBlank()) {
-                element.setTextContent(MASK);
-            }
+            element.setTextContent(
+                    HostnameMasker.mask(element.getTextContent(), MASK));
         }
 
         Node child = element.getFirstChild();

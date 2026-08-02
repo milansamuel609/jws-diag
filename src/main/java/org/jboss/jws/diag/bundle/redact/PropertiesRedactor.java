@@ -2,6 +2,7 @@ package org.jboss.jws.diag.bundle.redact;
 
 import org.jboss.jws.diag.bundle.BundleContext;
 import org.jboss.jws.diag.bundle.model.CollectedFile;
+import org.jboss.jws.diag.common.RedactionLevel;
 
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -10,14 +11,6 @@ import java.util.regex.Pattern;
 public final class PropertiesRedactor implements Redactor {
 
     public static final String MASK = XmlAttributeRedactor.MASK;
-
-    private static final String[] SENSITIVE_KEYWORDS = {
-            "password",
-            "keystorepass",
-            "truststorepass",
-            "secret",
-            "credential"
-    };
 
     private static final Pattern KEY_VALUE_LINE = Pattern.compile("^(\\s*[^=:#\\s][^=:]*)([=:])(.*)$");
 
@@ -28,11 +21,12 @@ public final class PropertiesRedactor implements Redactor {
 
     @Override
     public CollectedFile redact(CollectedFile file, BundleContext context) {
-        StringBuilder result = new StringBuilder();
-        String[] lines = file.getContent().split("\n", -1);
+        String normalizedContent = file.getContent().replace("\r\n", "\n").replace("\r", "\n");
+        String[] lines = normalizedContent.split("\n", -1);
 
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < lines.length; i++) {
-            result.append(redactLine(lines[i]));
+            result.append(redactLine(lines[i], context));
             if (i < lines.length - 1) {
                 result.append("\n");
             }
@@ -41,7 +35,7 @@ public final class PropertiesRedactor implements Redactor {
         return file.withContent(result.toString());
     }
 
-    private String redactLine(String line) {
+    private String redactLine(String line, BundleContext context) {
         Matcher matcher = KEY_VALUE_LINE.matcher(line);
         if (!matcher.matches()) {
             return line;
@@ -50,15 +44,24 @@ public final class PropertiesRedactor implements Redactor {
         String key = matcher.group(1);
         String separator = matcher.group(2);
 
+        String value = matcher.group(3);
+
         if (isSensitive(key)) {
             return key + separator + MASK;
         }
-        return line;
+
+        if (context.getRedactionLevel() == RedactionLevel.STRICT) {
+            value = IpAddressMasker.mask(value, MASK);
+            value = HostnameMasker.mask(value, MASK);
+            value = EnvironmentVariableMasker.mask(value, MASK);
+        }
+
+        return key + separator + value;
     }
 
     private boolean isSensitive(String key) {
         String lower = key.toLowerCase(Locale.ROOT);
-        for (String keyword : SENSITIVE_KEYWORDS) {
+        for (String keyword : SensitiveKeywords.KEYWORDS) {
             if (lower.contains(keyword)) {
                 return true;
             }
