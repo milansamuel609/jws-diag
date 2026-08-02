@@ -8,15 +8,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-import java.util.regex.Pattern;
-
 public final class IpAddressRedactor implements Redactor {
 
     public static final String MASK = "[REDACTED]";
-
-    private static final Pattern IPV4_PATTERN = Pattern.compile(
-            "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}"
-                    + "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b");
 
     @Override
     public boolean supports(CollectedFile file) {
@@ -50,8 +44,9 @@ public final class IpAddressRedactor implements Redactor {
             for (int i = 0; i < attributes.getLength(); i++) {
                 Node attribute = attributes.item(i);
                 String value = attribute.getNodeValue();
-                if (value != null && IPV4_PATTERN.matcher(value).find()) {
-                    attribute.setNodeValue(IPV4_PATTERN.matcher(value).replaceAll(MASK));
+                if (IpAddressMasker.containsIpAddress(value)) {
+                    attribute.setNodeValue(
+                            IpAddressMasker.mask(value, MASK));
                 }
             }
         }

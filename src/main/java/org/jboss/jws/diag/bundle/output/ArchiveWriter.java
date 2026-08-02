@@ -1,6 +1,7 @@
 package org.jboss.jws.diag.bundle.output;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,25 +23,14 @@ public final class ArchiveWriter {
                         byte[] content = TarWriter.readAllBytes(file);
                         tarWriter.writeFileEntry(entryName, content);
                     } catch (IOException e) {
-                        throw new UncheckedIOExceptionWrapper(e);
+                        throw new UncheckedIOException(e);
                     }
                 });
-            } catch (UncheckedIOExceptionWrapper e) {
+            } catch (UncheckedIOException e) {
                 throw e.getCause();
             }
 
             tarWriter.writeEndOfArchive();
-        }
-    }
-
-    private static final class UncheckedIOExceptionWrapper extends RuntimeException {
-        UncheckedIOExceptionWrapper(IOException cause) {
-            super(cause);
-        }
-
-        @Override
-        public synchronized IOException getCause() {
-            return (IOException) super.getCause();
         }
     }
 }

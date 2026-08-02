@@ -2,7 +2,6 @@ package org.jboss.jws.diag.validate;
 
 import org.jboss.jws.diag.common.ExitCodes;
 import org.jboss.jws.diag.common.OutputFormatMixin;
-import org.jboss.jws.diag.common.Severity;
 import org.jboss.jws.diag.validate.model.Finding;
 import org.jboss.jws.diag.validate.output.HumanReadableOutput;
 import org.jboss.jws.diag.validate.output.JsonOutput;
@@ -28,25 +27,28 @@ public class ValidateCommand implements Runnable {
 
     @Override
     public void run() {
-        Path resolvedCatalinaBase = resolveCatalinaBase();
+        System.exit(execute());
+    }
 
-        ValidationEngine validationEngine = new ValidationEngine();
-
-        List<Finding> findings =
-                validationEngine.validate(resolvedCatalinaBase);
-
-        int exitCode = determineExitCode(findings);
-
-        switch (outputFormat.getFormat()) {
-            case HUMAN:
-                new HumanReadableOutput().print(findings);
-                break;
-            case JSON:
-                new JsonOutput().print(findings, exitCode);
-                break;
+    public int execute() {
+        Path resolvedCatalinaBase;
+        try {
+            resolvedCatalinaBase = resolveCatalinaBase();
+        } catch (IllegalStateException e) {
+            System.err.println("[ERROR] " + e.getMessage());
+            return ExitCodes.ERRORS;
         }
 
-        System.exit(exitCode);
+        ValidationEngine validationEngine = new ValidationEngine();
+        List<Finding> findings = validationEngine.validate(resolvedCatalinaBase);
+        int exitCode = ExitCodeCalculator.determineExitCode(findings);
+
+        switch (outputFormat.getFormat()) {
+            case HUMAN: new HumanReadableOutput().print(findings); break;
+            case JSON: new JsonOutput().print(findings, exitCode); break;
+        }
+
+        return exitCode;
     }
 
     private Path resolveCatalinaBase() {
@@ -56,25 +58,11 @@ public class ValidateCommand implements Runnable {
 
         String envValue = System.getenv("CATALINA_BASE");
         if (envValue == null || envValue.isBlank()) {
-            System.err.println("[ERROR] Could not determine CATALINA_BASE. "
-                    + "Use --catalina-base, or set the CATALINA_BASE environment variable.");
-            System.exit(ExitCodes.ERRORS);
+            throw new IllegalStateException(
+                    "Could not determine CATALINA_BASE. "
+                            + "Use --catalina-base, or set the CATALINA_BASE environment variable.");
         }
 
         return Paths.get(envValue);
-    }
-
-    public int determineExitCode(List<Finding> findings) {
-        int highestCode = ExitCodes.OK;
-
-        for (Finding finding : findings) {
-            if (finding.getSeverity() == Severity.ERROR) {
-                highestCode = ExitCodes.ERRORS;
-            } else if (finding.getSeverity() == Severity.WARN && highestCode < ExitCodes.ERRORS) {
-                highestCode = ExitCodes.WARNINGS;
-            }
-        }
-
-        return highestCode;
     }
 }

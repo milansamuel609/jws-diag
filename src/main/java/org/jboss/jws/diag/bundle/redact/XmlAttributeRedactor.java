@@ -28,14 +28,6 @@ public final class XmlAttributeRedactor implements Redactor {
 
     public static final String MASK = "[REDACTED]";
 
-    private static final String[] SENSITIVE_KEYWORDS = {
-            "password",
-            "keystorepass",
-            "truststorepass",
-            "secret",
-            "credential"
-    };
-
     @Override
     public boolean supports(CollectedFile file) {
         return file.getType() == CollectedFile.Type.XML_CONFIG;
@@ -56,7 +48,7 @@ public final class XmlAttributeRedactor implements Redactor {
 
     private boolean isSensitiveAttribute(String attributeName) {
         String lower = attributeName.toLowerCase(Locale.ROOT);
-        for (String keyword : SENSITIVE_KEYWORDS) {
+        for (String keyword : SensitiveKeywords.KEYWORDS) {
             if (lower.contains(keyword)) {
                 return true;
             }
