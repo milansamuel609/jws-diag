@@ -10,7 +10,7 @@ This guide maps each validation rule to its purpose, affected configuration, and
 
 ## Running Validation
 
-Run validation against the current Tomcat installation. By default, findings are displayed in a human-readable format:
+Run validation against the current Tomcat installation. By default, validation findings are displayed in a human-readable format.
 
 ```bash
 jws-diag validate
@@ -130,7 +130,7 @@ jws-diag validate
 
 If the issue has been successfully remediated, the corresponding validation rule will no longer appear in the output. If findings are still reported, review the associated configuration and ensure the recommended resolution has been fully applied.
 
-## Using Support Bundles
+## Support Bundles
 
 When additional troubleshooting or support is required, generate a **redacted support bundle** using:
 
