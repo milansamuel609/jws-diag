@@ -39,4 +39,25 @@ public class EnvironmentVariableMaskerTest {
                 EnvironmentVariableMasker.containsEnvironmentVariable("plain-text"))
                 .isFalse();
     }
+
+    @Test
+    void shouldPreserveJavaHomeVariable() {
+        String value = "${java.home}";
+        assertThat(EnvironmentVariableMasker.mask(value, "[REDACTED]"))
+                .isEqualTo("${java.home}");
+    }
+
+    @Test
+    void shouldPreserveJavaIoTmpdirVariable() {
+        String value = "${java.io.tmpdir}";
+        assertThat(EnvironmentVariableMasker.mask(value, "[REDACTED]"))
+                .isEqualTo("${java.io.tmpdir}");
+    }
+
+    @Test
+    void shouldPreserveUserDirVariable() {
+        String value = "${user.dir}";
+        assertThat(EnvironmentVariableMasker.mask(value, "[REDACTED]"))
+                .isEqualTo("${user.dir}");
+    }
 }

@@ -33,18 +33,52 @@ public class LogRedactorTest {
     }
 
     @Test
-    void shouldLeaveContentUnchangedAndMarkAsRedacted() {
+    void shouldRedactPasswordInLog() {
 
         CollectedFile file = CollectedFile.builder()
                 .relativeArchivePath("logs/catalina.out")
                 .sourcePath(Path.of("logs/catalina.out"))
                 .type(CollectedFile.Type.LOG)
-                .content("hello")
+                .content("Login failed password=secret123")
                 .build();
 
         CollectedFile result = redactor.redact(file, context);
 
-        assertThat(result.getContent()).isEqualTo("hello");
+        assertThat(result.getContent())
+                .isEqualTo("Login failed password=[REDACTED]");
+
         assertThat(result.isRedacted()).isTrue();
+    }
+
+    @Test
+    void shouldRedactSecretInLog() {
+
+        CollectedFile file = CollectedFile.builder()
+                .relativeArchivePath("logs/catalina.out")
+                .sourcePath(Path.of("logs/catalina.out"))
+                .type(CollectedFile.Type.LOG)
+                .content("Authentication failed secret=mySecretValue")
+                .build();
+
+        CollectedFile result = redactor.redact(file, context);
+
+        assertThat(result.getContent())
+                .isEqualTo("Authentication failed secret=[REDACTED]");
+    }
+
+    @Test
+    void shouldRedactKeystorePasswordInLog() {
+
+        CollectedFile file = CollectedFile.builder()
+                .relativeArchivePath("logs/catalina.out")
+                .sourcePath(Path.of("logs/catalina.out"))
+                .type(CollectedFile.Type.LOG)
+                .content("keystorePass=SuperSecret123")
+                .build();
+
+        CollectedFile result = redactor.redact(file, context);
+
+        assertThat(result.getContent())
+                .isEqualTo("keystorePass=[REDACTED]");
     }
 }
