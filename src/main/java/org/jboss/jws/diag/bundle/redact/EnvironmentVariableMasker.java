@@ -11,7 +11,10 @@ public final class EnvironmentVariableMasker {
 
     private static final Set<String> SAFE_VARIABLES = Set.of(
             "catalina.home",
-            "catalina.base"
+            "catalina.base",
+            "java.home",
+            "java.io.tmpdir",
+            "user.dir"
     );
 
     private EnvironmentVariableMasker() {
