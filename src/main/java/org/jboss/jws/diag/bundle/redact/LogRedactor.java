@@ -12,7 +12,7 @@ public final class LogRedactor implements Redactor {
 
     private static final Pattern SENSITIVE_VALUE_PATTERN =
             Pattern.compile(
-                    "(?i)(\\b(?:password|keystorepass|truststorepass|secret|credential)\\b"
+                    "(?i)((?:password|keystorepass|truststorepass|secret|credential)"
                             + "\\s*[=:]\\s*)([^\\s,;]+)");
 
     @Override
