@@ -81,4 +81,20 @@ public class LogRedactorTest {
         assertThat(result.getContent())
                 .isEqualTo("keystorePass=[REDACTED]");
     }
+
+    @Test
+    void shouldRedactCompoundKeystorePasswordInLog() {
+
+        CollectedFile file = CollectedFile.builder()
+                .relativeArchivePath("logs/catalina.out")
+                .sourcePath(Path.of("logs/catalina.out"))
+                .type(CollectedFile.Type.LOG)
+                .content("certificateKeystorePassword=SuperSecret123")
+                .build();
+
+        CollectedFile result = redactor.redact(file, context);
+
+        assertThat(result.getContent())
+                .isEqualTo("certificateKeystorePassword=[REDACTED]");
+    }
 }

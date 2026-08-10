@@ -3,7 +3,9 @@ package org.jboss.jws.diag.bundle.collect;
 import org.jboss.jws.diag.bundle.BundleContext;
 import org.jboss.jws.diag.bundle.model.CollectedFile;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -122,49 +124,49 @@ public final class LogCollector {
     }
 
     private String sliceCatalinaOut(Path path) throws IOException {
-        List<String> allLines =
-                Files.readAllLines(path, StandardCharsets.UTF_8);
-
-        LocalDate[] effectiveDates =
-                new LocalDate[allLines.size()];
-
-        LocalDate lastSeenDate = null;
-
-        for (int i = 0; i < allLines.size(); i++) {
-            Optional<LocalDate> headerDate =
-                    extractLineDate(allLines.get(i));
-
-            if (headerDate.isPresent()) {
-                lastSeenDate = headerDate.get();
-            }
-
-            effectiveDates[i] = lastSeenDate;
-        }
-
         LocalDate today = LocalDate.now(clock);
-
-        LocalDate windowEnd = today.minusDays(1);
-        LocalDate windowStart = today.minusDays(MAX_DAYS);
+        LocalDate windowStart = today.minusDays(MAX_DAYS - 1);
 
         ArrayDeque<String> kept = new ArrayDeque<>();
 
-        for (int i = allLines.size() - 1; i >= 0; i--) {
+        List<String> pending = new ArrayList<>();
 
+        try (TailLineReader reader = new TailLineReader(path)) {
+            String line;
+
+            while (kept.size() < MAX_LINES && (line = reader.previousLine()) != null) {
+                Optional<LocalDate> headerDate = extractLineDate(line);
+
+                if (headerDate.isEmpty()) {
+                    pending.add(line);
+                    continue;
+                }
+
+                LocalDate date = headerDate.get();
+
+                if (date.isBefore(windowStart)) {
+                    break;
+                }
+
+                for (String p : pending) {
+                    if (kept.size() >= MAX_LINES) {
+                        break;
+                    }
+                    kept.addFirst(p);
+                }
+                pending.clear();
+
+                if (kept.size() < MAX_LINES) {
+                    kept.addFirst(line);
+                }
+            }
+        }
+
+        for (String p : pending) {
             if (kept.size() >= MAX_LINES) {
                 break;
             }
-
-            LocalDate lineDate = effectiveDates[i];
-
-            if (lineDate != null && lineDate.isAfter(windowEnd)) {
-                continue;
-            }
-
-            if (lineDate != null && lineDate.isBefore(windowStart)) {
-                break;
-            }
-
-            kept.addFirst(allLines.get(i));
+            kept.addFirst(p);
         }
 
         return String.join(System.lineSeparator(), kept);
@@ -188,6 +190,94 @@ public final class LogCollector {
                             LOG_DATE_FORMAT));
         } catch (DateTimeParseException e) {
             return Optional.empty();
+        }
+    }
+
+    private static final class TailLineReader implements Closeable {
+
+        private static final int CHUNK_SIZE = 64 * 1024;
+
+        private final RandomAccessFile raf;
+        private long position;
+        private byte[] carry = new byte[0];
+        private final ArrayDeque<byte[]> buffered = new ArrayDeque<>();
+        private boolean exhausted;
+
+        TailLineReader(Path path) throws IOException {
+            this.raf = new RandomAccessFile(path.toFile(), "r");
+            this.position = raf.length();
+            this.exhausted = position == 0;
+        }
+
+        String previousLine() throws IOException {
+            while (buffered.isEmpty() && !exhausted) {
+                fillBuffer();
+            }
+
+            if (buffered.isEmpty()) {
+                return null;
+            }
+
+            byte[] lineBytes = buffered.poll();
+            String line = new String(lineBytes, StandardCharsets.UTF_8);
+
+            if (line.endsWith("\r")) {
+                line = line.substring(0, line.length() - 1);
+            }
+
+            return line;
+        }
+
+        private void fillBuffer() throws IOException {
+            int size = (int) Math.min(CHUNK_SIZE, position);
+            position -= size;
+
+            byte[] block = new byte[size];
+            raf.seek(position);
+            raf.readFully(block);
+
+            byte[] combined = new byte[block.length + carry.length];
+            System.arraycopy(block, 0, combined, 0, block.length);
+            System.arraycopy(carry, 0, combined, block.length, carry.length);
+
+            int cursor = combined.length;
+            List<byte[]> newestFirst = new ArrayList<>();
+
+            for (int i = combined.length - 1; i >= 0; i--) {
+                if (combined[i] == '\n') {
+                    int lineStart = i + 1;
+
+                    if (lineStart < cursor) {
+                        byte[] lineBytes = new byte[cursor - lineStart];
+                        System.arraycopy(combined, lineStart, lineBytes, 0, lineBytes.length);
+                        newestFirst.add(lineBytes);
+                    }
+
+                    cursor = i;
+                }
+            }
+
+            if (position == 0) {
+                byte[] firstLine = new byte[cursor];
+                System.arraycopy(combined, 0, firstLine, 0, cursor);
+
+                if (firstLine.length > 0) {
+                    newestFirst.add(firstLine);
+                }
+
+                carry = new byte[0];
+                exhausted = true;
+            } else {
+                carry = new byte[cursor];
+                System.arraycopy(combined, 0, carry, 0, cursor);
+            }
+
+            buffered.addAll(newestFirst);
+        }
+
+        @Override
+        public void close() throws IOException {
+            raf.close();
         }
     }
 }

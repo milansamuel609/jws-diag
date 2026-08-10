@@ -127,7 +127,7 @@ public class LogCollectorTest {
     }
 
     @Test
-    void shouldExcludeTodaysEntriesFromCatalinaOut(
+    void shouldIncludeTodaysEntriesInCatalinaOut(
             @TempDir Path catalinaBase) throws IOException {
 
         Path logs = catalinaBase.resolve("logs");
@@ -140,7 +140,7 @@ public class LogCollectorTest {
                         "yesterday, should be kept"),
                 header(
                         "2026-08-08",
-                        "today, should be excluded"));
+                        "today, should also be kept"));
 
         Files.writeString(
                 logs.resolve("catalina.out"),
@@ -156,11 +156,11 @@ public class LogCollectorTest {
 
         assertThat(kept)
                 .contains("yesterday, should be kept")
-                .doesNotContain("today, should be excluded");
+                .contains("today, should also be kept");
     }
 
     @Test
-    void shouldKeepPreviousThreeCalendarDays(@TempDir Path catalinaBase) throws IOException {
+    void shouldKeepLastThreeCalendarDaysIncludingToday(@TempDir Path catalinaBase) throws IOException {
         Path logs = catalinaBase.resolve("logs");
         Files.createDirectories(logs);
 
@@ -185,11 +185,11 @@ public class LogCollectorTest {
         String kept = files.get(0).getContent();
 
         assertThat(kept)
-                .contains("Aug5")
                 .contains("Aug6")
                 .contains("Aug7")
+                .contains("Aug8")
                 .doesNotContain("Aug4")
-                .doesNotContain("Aug8");
+                .doesNotContain("Aug5");
     }
 
     @Test
@@ -211,25 +211,25 @@ public class LogCollectorTest {
         allLines.addAll(
                 daysWorthOfLines(
                         "2026-08-05",
-                        6000,
+                        500,
                         "Aug5"));
 
         allLines.addAll(
                 daysWorthOfLines(
                         "2026-08-06",
-                        4000,
+                        6000,
                         "Aug6"));
 
         allLines.addAll(
                 daysWorthOfLines(
                         "2026-08-07",
-                        3000,
+                        4000,
                         "Aug7"));
 
         allLines.addAll(
                 daysWorthOfLines(
                         "2026-08-08",
-                        2000,
+                        3000,
                         "Aug8"));
 
         Files.writeString(
@@ -253,31 +253,31 @@ public class LogCollectorTest {
         assertThat(kept).hasSize(10_000);
 
         assertThat(kept)
-                .noneMatch(l -> l.contains("Aug8"));
-
-        assertThat(kept)
                 .noneMatch(l -> l.contains("Aug4"));
 
         assertThat(kept)
-                .filteredOn(l -> l.contains("Aug7"))
+                .noneMatch(l -> l.contains("Aug5"));
+
+        assertThat(kept)
+                .filteredOn(l -> l.contains("Aug8"))
                 .hasSize(3000);
 
         assertThat(kept)
-                .filteredOn(l -> l.contains("Aug6"))
+                .filteredOn(l -> l.contains("Aug7"))
                 .hasSize(4000);
 
         assertThat(kept)
-                .filteredOn(l -> l.contains("Aug5"))
+                .filteredOn(l -> l.contains("Aug6"))
                 .hasSize(3000);
 
         assertThat(kept)
                 .filteredOn(
-                        l -> l.contains("Aug5 line 3001"))
+                        l -> l.contains("Aug6 line 3001"))
                 .hasSize(1);
 
         assertThat(kept)
                 .noneMatch(
-                        l -> l.contains("Aug5 line 3000"));
+                        l -> l.contains("Aug6 line 3000"));
     }
 
     @Test
@@ -338,17 +338,13 @@ public class LogCollectorTest {
                                 .split(
                                         System.lineSeparator()));
 
-        assertThat(kept).hasSize(4300);
+        assertThat(kept).hasSize(4500);
 
         assertThat(kept)
                 .noneMatch(l -> l.contains("Aug4"));
 
         assertThat(kept)
-                .noneMatch(l -> l.contains("Aug8"));
-
-        assertThat(kept)
-                .filteredOn(l -> l.contains("Aug5"))
-                .hasSize(800);
+                .noneMatch(l -> l.contains("Aug5"));
 
         assertThat(kept)
                 .filteredOn(l -> l.contains("Aug6"))
@@ -357,6 +353,10 @@ public class LogCollectorTest {
         assertThat(kept)
                 .filteredOn(l -> l.contains("Aug7"))
                 .hasSize(2000);
+
+        assertThat(kept)
+                .filteredOn(l -> l.contains("Aug8"))
+                .hasSize(1000);
     }
 
     @Test
