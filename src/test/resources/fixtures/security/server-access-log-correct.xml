@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="-1" shutdown="SHUTDOWN">
+    <Service name="Catalina">
+
+        <Engine name="Catalina" defaultHost="localhost">
+
+            <Valve className="org.apache.catalina.valves.AccessLogValve"
+                   directory="logs"
+                   prefix="localhost_access_log"
+                   suffix=".txt"
+                   pattern="%h %l %u %t &quot;%r&quot; %s %b"
+                   rotatable="true" />
+
+        </Engine>
+
+    </Service>
+</Server>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="-1" shutdown="SHUTDOWN">
+    <Service name="Catalina">
+
+        <Connector port="8443" SSLEnabled="true">
+            <SSLHostConfig>
+                <Certificate certificateKeystoreFile="missing-intermediate.jks"
+                             certificateKeystorePassword="changeit"
+                             certificateKeystoreType="JKS" />
+            </SSLHostConfig>
+        </Connector>
+
+        <Connector port="8444" SSLEnabled="true">
+            <SSLHostConfig>
+                <Certificate certificateKeystoreFile="missing-intermediate.p12"
+                             certificateKeystorePassword="changeit"
+                             certificateKeystoreType="PKCS12" />
+            </SSLHostConfig>
+        </Connector>
+
+    </Service>
+</Server>

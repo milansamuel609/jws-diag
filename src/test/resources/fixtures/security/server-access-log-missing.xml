@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="-1" shutdown="SHUTDOWN">
+    <Service name="Catalina">
+
+        <Engine name="Catalina" defaultHost="localhost">
+
+        </Engine>
+
+    </Service>
+</Server>
