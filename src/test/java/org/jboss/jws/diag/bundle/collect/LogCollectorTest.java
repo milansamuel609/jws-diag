@@ -424,6 +424,38 @@ public class LogCollectorTest {
     }
 
     @Test
+    void shouldDiscardPendingLinesWhenExcludedEntryIsReached(
+            @TempDir Path catalinaBase) throws IOException {
+
+        Path logs = catalinaBase.resolve("logs");
+        Files.createDirectories(logs);
+
+        String content = String.join(
+                System.lineSeparator(),
+                header("2026-08-04", "old entry, excluded"),
+                "old orphan continuation line",
+                "another old orphan continuation line",
+                header("2026-08-06", "valid entry"));
+
+        Files.writeString(
+                logs.resolve("catalina.out"),
+                content,
+                StandardCharsets.UTF_8);
+
+        List<CollectedFile> files =
+                collector.collectLogFiles(
+                        contextFor(catalinaBase));
+
+        String kept = files.get(0).getContent();
+
+        assertThat(kept)
+                .contains("valid entry")
+                .doesNotContain("old entry, excluded")
+                .doesNotContain("old orphan continuation line")
+                .doesNotContain("another old orphan continuation line");
+    }
+
+    @Test
     void shouldSetRelativeArchivePathUnderLogsDirectory(
             @TempDir Path catalinaBase) throws IOException {
 
