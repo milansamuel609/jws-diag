@@ -1,0 +1,54 @@
+package org.jboss.jws.diag.validate.rules.security;
+
+import org.jboss.jws.diag.common.RuleId;
+import org.jboss.jws.diag.common.Severity;
+import org.jboss.jws.diag.validate.RuleContext;
+import org.jboss.jws.diag.validate.model.Finding;
+import org.junit.jupiter.api.Test;
+import org.w3c.dom.Document;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.nio.file.Path;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class AccessLogValveConfigurationTest {
+
+    private final AccessLogValveConfigurationRule rule = new AccessLogValveConfigurationRule();
+
+    private Document parseFixture(String resourcePath) throws Exception {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        return db.parse(getClass().getResourceAsStream(resourcePath));
+    }
+
+    @Test
+    void shouldPassWhenAccessLogValveIsConfigured() throws Exception {
+        Document serverXml = parseFixture("/fixtures/security/server-access-log-correct.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
+
+        assertThat(rule.evaluate(ctx)).isEmpty();
+    }
+
+    @Test
+    void shouldFlagWhenAccessLogValveIsMissing() throws Exception {
+        Document serverXml = parseFixture("/fixtures/security/server-access-log-missing.xml");
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
+
+        List<Finding> findings = rule.evaluate(ctx);
+
+        assertThat(findings).hasSize(1);
+        assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.SEC_008);
+        assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.WARN);
+        assertThat(findings.get(0).getDetail()).contains("No AccessLogValve is configured");
+    }
+
+    @Test
+    void shouldPassWhenServerXmlIsNull() {
+        RuleContext ctx = new RuleContext(Path.of("/dummy"), null, null, "testuser");
+
+        assertThat(rule.evaluate(ctx)).isEmpty();
+    }
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Server port="-1" shutdown="SHUTDOWN">
+
+    <Service name="Catalina">
+
+        <Connector address="127.0.0.1"
+                   port="8080" />
+
+    </Service>
+
+</Server>
