@@ -145,6 +145,7 @@ public final class LogCollector {
                 LocalDate date = headerDate.get();
 
                 if (date.isBefore(windowStart)) {
+                    pending.clear();
                     break;
                 }
 

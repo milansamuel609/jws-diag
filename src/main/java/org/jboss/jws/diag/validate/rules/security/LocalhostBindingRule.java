@@ -35,9 +35,11 @@ public class LocalhostBindingRule implements Rule {
                         .category("Security")
                         .severity(Severity.INFO)
                         .summary("Localhost Binding")
-                        .detail("Checks if the connector address attribute is restricted to localhost (127.0.0.1)")
+                        .detail("Connector is not restricted to localhost and may be accessible "
+                                + "on other network interfaces.")
                         .file("server.xml")
-                        .fix("If you want the server accessible to the public, change address to 0.0.0.0")
+                        .fix("To restrict this connector to localhost only, add address=\"127.0.0.1\" to the <Connector> element. " +
+                                "Leave address unset or set to 0.0.0.0 if public access is intentional.")
                         .build());
             }
         }
