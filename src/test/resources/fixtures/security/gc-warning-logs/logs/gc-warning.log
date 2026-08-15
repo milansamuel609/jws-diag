@@ -1,0 +1,5 @@
+[10.123s][info][gc] GC(10) Pause Full (Allocation Failure) 240M->238M(256M) 850.123ms
+[11.456s][info][gc] GC(11) Pause Full (Allocation Failure) 242M->241M(256M) 910.456ms
+[12.789s][info][gc] GC(12) Pause Full (Allocation Failure) 244M->243M(256M) 950.789ms
+[13.912s][info][gc] GC(13) Pause Full (Allocation Failure) 246M->245M(256M) 1020.912ms
+java.lang.OutOfMemoryError: Java heap space
