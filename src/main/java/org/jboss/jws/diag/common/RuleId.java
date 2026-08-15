@@ -11,6 +11,7 @@ public enum RuleId {
     SEC_006("SEC-006"),
     SEC_007("SEC-007"),
     SEC_008("SEC-008"),
+    SEC_009("SEC-009"),
 
     TLS_001("TLS-001"),
     TLS_002("TLS-002"),

@@ -5,7 +5,7 @@
         <Connector port="8443" SSLEnabled="true">
 
             <SSLHostConfig>
-                <Certificate certificateKeystoreFile="valid-keystore.p12"
+                <Certificate certificateKeystoreFile="server.p12"
                              certificateKeystorePassword="changeit"
                              certificateKeystoreType="PKCS12" />
             </SSLHostConfig>
