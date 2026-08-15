@@ -34,7 +34,7 @@ public class LocalhostBindingTest {
     }
 
     @Test
-    void shouldFlagWhenConnectorIsNotBoundToLocalHost() throws Exception {
+    void shouldFlagWhenConnectorIsNotBoundToLocalhost() throws Exception {
         Document serverXml = parseFixture("/fixtures/security/server-localhost-binding-missing.xml");
         RuleContext ctx = new RuleContext(Path.of("/dummy"), serverXml, null, "testuser");
 
@@ -43,6 +43,12 @@ public class LocalhostBindingTest {
         assertThat(findings).hasSize(1);
         assertThat(findings.get(0).getRuleId()).isEqualTo(RuleId.SEC_006);
         assertThat(findings.get(0).getSeverity()).isEqualTo(Severity.INFO);
+
+        assertThat(findings.get(0).getDetail()).contains("not restricted to localhost");
+
+        assertThat(findings.get(0).getFix())
+                .contains("127.0.0.1")
+                .contains("public access is intentional");
     }
 
     @Test
