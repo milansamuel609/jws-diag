@@ -1,0 +1,5 @@
+[0.123s][info][gc] GC(0) Pause Young (Normal) 32M->12M(256M) 4.123ms
+[1.456s][info][gc] GC(1) Pause Young (Normal) 48M->15M(256M) 3.812ms
+[2.789s][info][gc] GC(2) Pause Young (Normal) 61M->18M(256M) 4.001ms
+[4.102s][info][gc] GC(3) Pause Young (Normal) 72M->20M(256M) 4.221ms
+[5.315s][info][gc] GC(4) Pause Young (Normal) 84M->22M(256M) 3.954ms

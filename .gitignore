@@ -3,6 +3,9 @@
 
 # Log file
 *.log
+!src/test/resources/fixtures/security/gc-logs/logs/*.log
+!src/test/resources/fixtures/security/gc-warning-logs/logs/*.log
+!src/test/resources/fixtures/security/gc-non-gc-logs/logs/*.log
 
 # BlueJ files
 *.ctxt
