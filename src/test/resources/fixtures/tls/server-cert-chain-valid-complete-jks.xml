@@ -3,13 +3,11 @@
     <Service name="Catalina">
 
         <Connector port="8443" SSLEnabled="true">
-
             <SSLHostConfig>
-                <Certificate certificateKeystoreFile="valid-keystore.jks"
+                <Certificate certificateKeystoreFile="server.jks"
                              certificateKeystorePassword="changeit"
                              certificateKeystoreType="JKS" />
             </SSLHostConfig>
-
         </Connector>
 
     </Service>

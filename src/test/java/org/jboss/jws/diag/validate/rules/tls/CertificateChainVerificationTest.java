@@ -26,8 +26,8 @@ public class CertificateChainVerificationTest {
 
     @Test
     void shouldPassWhenJksCertificateChainIsValid() throws Exception {
-        Path catalinaBase = Path.of("src/test/resources/fixtures/tls/keystores");
-        Document serverXml = parseFixture("/fixtures/tls/server-cert-chain-valid-jks.xml");
+        Path catalinaBase = Path.of("src/test/resources/fixtures/tls/tls-chain-keystores");
+        Document serverXml = parseFixture("/fixtures/tls/server-cert-chain-valid-complete-jks.xml");
         RuleContext ctx = new RuleContext(catalinaBase, serverXml, null, "testuser");
 
         List<Finding> findings = rule.evaluate(ctx);
@@ -53,7 +53,7 @@ public class CertificateChainVerificationTest {
     @Test
     void shouldPassWhenPkcs12CertificateChainIsValid() throws Exception {
         Path catalinaBase = Path.of("src/test/resources/fixtures/tls/keystores");
-        Document serverXml = parseFixture("/fixtures/tls/server-cert-chain-valid-pkcs12.xml");
+        Document serverXml = parseFixture("/fixtures/tls/server-cert-chain-valid-complete-pkcs12.xml");
         RuleContext ctx = new RuleContext(catalinaBase, serverXml, null, "testuser");
 
         List<Finding> findings = rule.evaluate(ctx);
