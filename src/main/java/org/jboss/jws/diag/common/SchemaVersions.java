@@ -24,6 +24,7 @@ public final class SchemaVersions {
     public static final String LOGS = "1.0";
     public static final String MODCLUSTER = "1.0";
     public static final String INSTANCES = "1.0";
+    public static final String BUNDLE = "1.0";
 
     private SchemaVersions() {
     }

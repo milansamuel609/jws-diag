@@ -24,6 +24,7 @@ Each command versions its output independently. The payloads are unrelated, so a
 | `logs`, `logs --all` | `1.0` |
 | `modcluster` | `1.0` |
 | `instances` | `1.0` |
+| `bundle` | `1.0` |
 
 The values live in one place in the source: `org.jboss.jws.diag.common.SchemaVersions`.
 

@@ -2,6 +2,7 @@ package org.jboss.jws.diag.common;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jboss.jws.diag.bundle.output.BundleJsonFormatter;
 import org.jboss.jws.diag.config.formatter.ConfigJsonFormatter;
 import org.jboss.jws.diag.config.formatter.MultiConfigJsonFormatter;
 import org.jboss.jws.diag.config.model.InstanceConfigResult;
@@ -188,6 +189,12 @@ class JsonSchemaContractTest {
     void instances() throws Exception {
         assertContract("instances", SchemaVersions.INSTANCES,
                 new InstancesJsonFormatter().format(List.of(new TomcatInstance(100, BASE_A, BASE_A))));
+    }
+
+    @Test
+    void bundle() throws Exception {
+        assertContract("bundle", SchemaVersions.BUNDLE,
+                new BundleJsonFormatter().format(BASE_A.resolve("jws-support-bundle-2026-09-15T00-00-00Z.tar.gz"), 2));
     }
 
     // ── fixtures ────────────────────────────────────────────────────────────

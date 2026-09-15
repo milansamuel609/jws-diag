@@ -2,8 +2,10 @@ package org.jboss.jws.diag.bundle;
 
 import org.jboss.jws.diag.bundle.manifest.ManifestGenerator;
 import org.jboss.jws.diag.bundle.output.ArchiveWriter;
+import org.jboss.jws.diag.bundle.output.BundleJsonFormatter;
 import org.jboss.jws.diag.bundle.validation.ValidationResultsWriter;
 import org.jboss.jws.diag.common.ExitCodes;
+import org.jboss.jws.diag.common.OutputFormat;
 import org.jboss.jws.diag.common.OutputFormatMixin;
 import org.jboss.jws.diag.common.RedactionLevel;
 import picocli.CommandLine.Command;
@@ -78,9 +80,13 @@ public class BundleCommand implements Runnable {
                 deleteRecursively(resolvedStagingDir);
             }
 
-            System.out.println("Bundle created at: " + archivePath);
-
             int skipped = context.getSkippedFileCount();
+            if (outputFormat.getFormat() == OutputFormat.JSON) {
+                System.out.println(new BundleJsonFormatter().format(archivePath, skipped));
+            } else {
+                System.out.println("Bundle created at: " + archivePath);
+            }
+
             if (skipped > 0) {
                 System.err.println("[WARN] Bundle is incomplete: " + skipped
                         + " file(s) could not be collected.");
