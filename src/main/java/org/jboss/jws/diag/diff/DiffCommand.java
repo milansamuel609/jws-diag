@@ -1,5 +1,6 @@
 package org.jboss.jws.diag.diff;
 
+import org.jboss.jws.diag.common.AllFlagConflicts;
 import org.jboss.jws.diag.common.ExitCodes;
 import org.jboss.jws.diag.common.MultiInstanceExitCode;
 import org.jboss.jws.diag.common.OutputFormat;
@@ -48,6 +49,15 @@ public class DiffCommand implements Runnable {
 
     @Override
     public void run() {
+        String conflict = AllFlagConflicts.when(all)
+                .option("--left", left)
+                .option("--right", right)
+                .message();
+        if (conflict != null) {
+            System.err.println(conflict);
+            System.exit(ExitCodes.TOOL_FAILURE);
+            return;
+        }
         if (all) {
             runMultiDiff();
         } else {
