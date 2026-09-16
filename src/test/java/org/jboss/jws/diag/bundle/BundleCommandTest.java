@@ -1,11 +1,16 @@
 package org.jboss.jws.diag.bundle;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.jws.diag.common.ExitCodes;
+import org.jboss.jws.diag.common.SchemaVersions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -79,5 +84,35 @@ public class BundleCommandTest {
         } finally {
             Files.deleteIfExists(created);
         }
+    }
+
+    @Test
+    void jsonFormat_printsOnlyJsonWithArchiveAndSkippedCount(
+            @TempDir Path catalinaBase, @TempDir Path outputDir) throws Exception {
+        writeConfFile(catalinaBase, "server.xml", "<Server/>");
+        BundleCommand command = new BundleCommand();
+        new CommandLine(command).parseArgs(
+                "--catalina-base", catalinaBase.toString(),
+                "--output-dir", outputDir.toString(),
+                "--format", "JSON");
+
+        PrintStream original = System.out;
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        int exitCode;
+        System.setOut(new PrintStream(stdout, true, StandardCharsets.UTF_8));
+        try {
+            exitCode = command.execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        // readTree fails if anything other than the JSON document reached stdout.
+        JsonNode json = new ObjectMapper().readTree(stdout.toString(StandardCharsets.UTF_8));
+        assertThat(exitCode).isEqualTo(ExitCodes.OK);
+        assertThat(json.get("schemaVersion").asText()).isEqualTo(SchemaVersions.BUNDLE);
+        assertThat(json.get("skippedFiles").asInt()).isZero();
+        Path archive = Path.of(json.get("archive").asText());
+        assertThat(archive).isAbsolute().exists();
+        assertThat(archive.getFileName().toString()).endsWith(".tar.gz");
     }
 }
