@@ -1,5 +1,6 @@
 package org.jboss.jws.diag.logs;
 
+import org.jboss.jws.diag.common.AllFlagConflicts;
 import org.jboss.jws.diag.common.ExitCodes;
 import org.jboss.jws.diag.common.OutputFormat;
 import org.jboss.jws.diag.common.OutputFormatMixin;
@@ -47,9 +48,13 @@ public class LogsCommand implements Runnable {
 
     @Override
     public void run() {
-        if (all && logFile != null) {
-            System.err.println("ERROR: --log-file cannot be combined with --all. "
-                    + "Each instance's log file is resolved from its own CATALINA_BASE.");
+        String conflict = AllFlagConflicts.when(all)
+                .option("--log-file", logFile)
+                .option("--catalina-home", catalinaHome)
+                .option("--catalina-base", catalinaBase)
+                .message();
+        if (conflict != null) {
+            System.err.println(conflict);
             System.exit(ExitCodes.TOOL_FAILURE);
             return;
         }

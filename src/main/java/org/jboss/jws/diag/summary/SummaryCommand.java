@@ -1,5 +1,6 @@
 package org.jboss.jws.diag.summary;
 
+import org.jboss.jws.diag.common.AllFlagConflicts;
 import org.jboss.jws.diag.common.ExitCodes;
 import org.jboss.jws.diag.common.MultiInstanceExitCode;
 import org.jboss.jws.diag.common.OutputFormat;
@@ -41,6 +42,15 @@ public class SummaryCommand implements Runnable {
 
     @Override
     public void run() {
+        String conflict = AllFlagConflicts.when(all)
+                .option("--catalina-home", catalinaHome)
+                .option("--catalina-base", catalinaBase)
+                .message();
+        if (conflict != null) {
+            System.err.println(conflict);
+            System.exit(ExitCodes.TOOL_FAILURE);
+            return;
+        }
         if (all) {
             runMultiSummary();
         } else {
