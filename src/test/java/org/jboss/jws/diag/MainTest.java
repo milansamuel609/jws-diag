@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class MainTest {
 
@@ -161,5 +162,33 @@ class MainTest {
         public void run() {
             throw new IllegalStateException("boom");
         }
+    }
+
+    // Enum option values are matched without regard to case, because every example in
+    // the README and docs writes --format json rather than --format JSON.
+
+    @Test
+    void formatValue_isAcceptedInAnyCase() {
+        for (String value : new String[] {"json", "JSON", "Json", "human", "HUMAN"}) {
+            CommandLine cmd = Main.commandLine();
+            assertThatCode(() -> cmd.parseArgs("config", "--format", value))
+                    .as("--format %s", value)
+                    .doesNotThrowAnyException();
+        }
+    }
+
+    @Test
+    void redactionLevelValue_isAcceptedInAnyCase() {
+        for (String value : new String[] {"strict", "STRICT", "Default"}) {
+            CommandLine cmd = Main.commandLine();
+            assertThatCode(() -> cmd.parseArgs("bundle", "--redaction-level", value))
+                    .as("--redaction-level %s", value)
+                    .doesNotThrowAnyException();
+        }
+    }
+
+    @Test
+    void unknownFormatValue_isStillRejected() {
+        assertThat(executeQuietly("config", "--format", "yaml")).isEqualTo(ExitCodes.TOOL_FAILURE);
     }
 }
