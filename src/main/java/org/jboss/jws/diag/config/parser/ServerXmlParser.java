@@ -41,19 +41,22 @@ import java.util.Map;
 public final class ServerXmlParser {
 
     private final PropertyResolver resolver;
+    private final List<String> warnings = new ArrayList<>();
 
     public ServerXmlParser(PropertyResolver resolver) {
         this.resolver = resolver;
     }
 
     public ServerConfig parse(Path serverXml) throws IOException {
+        warnings.clear();
         Document doc = loadDocument(serverXml);
         Element root = doc.getDocumentElement();
         return ServerConfig.builder()
-                .shutdownPort(intAttr(root, "port", 8005))
+                .shutdownPort(intAttr(root, "Server", "port", 8005))
                 .shutdownCommand(attr(root, "shutdown", "SHUTDOWN"))
                 .listeners(parseListeners(root))
                 .services(parseServices(root))
+                .warnings(List.copyOf(warnings))
                 .build();
     }
 
@@ -140,25 +143,25 @@ public final class ServerXmlParser {
         String maxThreads = attr(el, "maxThreads", null);
         if (maxThreads != null) {
             try { b.maxThreads(ConfigValue.explicit(Integer.parseInt(maxThreads))); }
-            catch (NumberFormatException ignored) { }
+            catch (NumberFormatException ignored) { recordInvalidNumber("Executor", "maxThreads", maxThreads, "the default"); }
         }
 
         String minSpare = attr(el, "minSpareThreads", null);
         if (minSpare != null) {
             try { b.minSpareThreads(ConfigValue.explicit(Integer.parseInt(minSpare))); }
-            catch (NumberFormatException ignored) { }
+            catch (NumberFormatException ignored) { recordInvalidNumber("Executor", "minSpareThreads", minSpare, "the default"); }
         }
 
         String threadPriority = attr(el, "threadPriority", null);
         if (threadPriority != null) {
             try { b.threadPriority(ConfigValue.explicit(Integer.parseInt(threadPriority))); }
-            catch (NumberFormatException ignored) { }
+            catch (NumberFormatException ignored) { recordInvalidNumber("Executor", "threadPriority", threadPriority, "the default"); }
         }
 
         String maxIdleTime = attr(el, "maxIdleTime", null);
         if (maxIdleTime != null) {
             try { b.maxIdleTime(ConfigValue.explicit(Integer.parseInt(maxIdleTime))); }
-            catch (NumberFormatException ignored) { }
+            catch (NumberFormatException ignored) { recordInvalidNumber("Executor", "maxIdleTime", maxIdleTime, "the default"); }
         }
 
         TomcatDefaults.applyExecutorDefaults(b);
@@ -179,7 +182,7 @@ public final class ServerXmlParser {
 
     private ConnectorConfig parseConnector(Element el) {
         ConnectorConfig.Builder b = ConnectorConfig.builder()
-                .port(intAttr(el, "port", 8080));
+                .port(intAttr(el, "Connector", "port", 8080));
 
         String protocol = attr(el, "protocol", null);
         if (protocol != null)
@@ -192,19 +195,19 @@ public final class ServerXmlParser {
         String maxThreads = attr(el, "maxThreads", null);
         if (maxThreads != null) {
             try { b.maxThreads(ConfigValue.explicit(Integer.parseInt(maxThreads))); }
-            catch (NumberFormatException ignored) { }
+            catch (NumberFormatException ignored) { recordInvalidNumber("Connector", "maxThreads", maxThreads, "the default"); }
         }
 
         String connTimeout = attr(el, "connectionTimeout", null);
         if (connTimeout != null) {
             try { b.connectionTimeout(ConfigValue.explicit(Integer.parseInt(connTimeout))); }
-            catch (NumberFormatException ignored) { }
+            catch (NumberFormatException ignored) { recordInvalidNumber("Connector", "connectionTimeout", connTimeout, "the default"); }
         }
 
         String maxConn = attr(el, "maxConnections", null);
         if (maxConn != null) {
             try { b.maxConnections(ConfigValue.explicit(Integer.parseInt(maxConn))); }
-            catch (NumberFormatException ignored) { }
+            catch (NumberFormatException ignored) { recordInvalidNumber("Connector", "maxConnections", maxConn, "the default"); }
         }
 
         String compression = attr(el, "compression", null);
@@ -226,7 +229,7 @@ public final class ServerXmlParser {
         String proxyPort = attr(el, "proxyPort", null);
         if (proxyPort != null) {
             try { b.proxyPort(Integer.parseInt(proxyPort)); }
-            catch (NumberFormatException ignored) { }
+            catch (NumberFormatException ignored) { recordInvalidNumber("Connector", "proxyPort", proxyPort, "no proxy port"); }
         }
 
         List<SslHostConfig> sslConfigs = parseSslHostConfigs(el);
@@ -402,13 +405,31 @@ public final class ServerXmlParser {
         return RedactionFilter.redact(name, resolver.resolve(raw));
     }
 
-    private int intAttr(Element el, String name, int defaultValue) {
+    private int intAttr(Element el, String element, String name, int defaultValue) {
         String raw = el.getAttribute(name);
         if (raw == null || raw.isEmpty()) return defaultValue;
+        String resolved = resolver.resolve(raw);
         try {
-            return Integer.parseInt(resolver.resolve(raw));
+            return Integer.parseInt(resolved);
         } catch (NumberFormatException ignored) {
+            recordInvalidNumber(element, name, resolved, String.valueOf(defaultValue));
             return defaultValue;
         }
+    }
+
+    // An attribute that is present but unusable must not be reported as absent. Tomcat
+    // will not apply it either, so the effective value is the default, but the operator
+    // needs to know their server.xml says something else.
+    private void recordInvalidNumber(String element, String attribute, String raw, String effective) {
+        String problem;
+        if (raw.startsWith("${VAULT::")) {
+            problem = "is a vault reference that tomcat-vault resolves at startup";
+        } else if (raw.contains("${")) {
+            problem = "references a property that could not be resolved";
+        } else {
+            problem = "is not a number";
+        }
+        warnings.add(element + " " + attribute + "=\"" + raw + "\" " + problem + "; reporting "
+                + effective + " instead.");
     }
 }

@@ -1,3 +1,5 @@
+WARNING: Connector port="${http.port}" references a property that could not be resolved; reporting 8080 instead.
+
 Connector :8080 [HTTP/1.1]
   protocol: HTTP/1.1 (explicit)
   sslEnabled: false (default)

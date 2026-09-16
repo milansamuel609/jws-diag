@@ -60,7 +60,7 @@ class ConfigJsonFormatterTest {
     @Test
     void schemaVersionPresentAtRoot() throws Exception {
         JsonNode root = MAPPER.readTree(formatter.format(minimalServer()));
-        assertThat(root.get("schemaVersion").asText()).isEqualTo("1.0");
+        assertThat(root.get("schemaVersion").asText()).isEqualTo(org.jboss.jws.diag.common.SchemaVersions.CONFIG);
     }
 
     @Test

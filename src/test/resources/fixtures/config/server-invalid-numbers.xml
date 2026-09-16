@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Numeric attributes set to values Tomcat cannot use. jws-diag must report them
+     rather than showing the defaults as if the attributes were never written. -->
+<Server port="notanumber" shutdown="SHUTDOWN">
+  <Service name="Catalina">
+    <Executor name="tomcatThreadPool" namePrefix="catalina-exec-"
+              maxThreads="lots" minSpareThreads="a few"/>
+    <Connector port="eighty-eighty" protocol="HTTP/1.1"
+               maxThreads="many" connectionTimeout="soon" maxConnections="plenty"
+               proxyPort="frontend"/>
+    <Engine name="Catalina" defaultHost="localhost">
+      <Host name="localhost" appBase="webapps"/>
+    </Engine>
+  </Service>
+</Server>

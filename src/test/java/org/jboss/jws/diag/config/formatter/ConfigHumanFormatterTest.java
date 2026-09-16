@@ -323,4 +323,22 @@ class ConfigHumanFormatterTest {
         assertThat(output).contains("proxyName: example.com");
         assertThat(output).contains("proxyPort: 80");
     }
+
+    @Test
+    void warnings_arePrintedBeforeTheConfiguration() {
+        ServerConfig config = ServerConfig.builder()
+                .shutdownPort(8005)
+                .services(minimalServer().getServices())
+                .warnings(java.util.List.of("Connector maxThreads=\"lots\" is not a number; reporting the default instead."))
+                .build();
+
+        String out = formatter.format(config);
+
+        assertThat(out).startsWith("WARNING: Connector maxThreads=\"lots\" is not a number");
+    }
+
+    @Test
+    void noWarnings_printsNoWarningSection() {
+        assertThat(formatter.format(minimalServer())).doesNotContain("WARNING:");
+    }
 }
