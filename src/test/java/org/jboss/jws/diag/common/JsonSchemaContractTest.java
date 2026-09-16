@@ -254,7 +254,8 @@ class JsonSchemaContractTest {
     private static List<ServerConfig> richConfigs() throws IOException, URISyntaxException {
         List<ServerConfig> configs = new ArrayList<>();
         for (String name : List.of("server-full-tls", "server-multi-connector", "server-executor",
-                "server-proxy-valve", "server-multi-service", "server-vault-tls")) {
+                "server-proxy-valve", "server-multi-service", "server-vault-tls",
+                "server-invalid-numbers")) {
             Path path = Paths.get(JsonSchemaContractTest.class.getClassLoader()
                     .getResource("fixtures/config/" + name + ".xml").toURI());
             PropertyResolver resolver = new PropertyResolver(

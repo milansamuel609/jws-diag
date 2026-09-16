@@ -301,4 +301,65 @@ class ServerXmlParserTest {
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("bad.xml");
     }
+
+    // Attributes that are present but not numbers must be reported, not shown as defaults.
+
+    @Test
+    void invalidNumbers_produceOneWarningPerAttribute() throws IOException {
+        ServerConfig cfg = parser.parse(fixture("server-invalid-numbers.xml"));
+
+        assertThat(cfg.getWarnings()).containsExactlyInAnyOrder(
+                "Server port=\"notanumber\" is not a number; reporting 8005 instead.",
+                "Executor maxThreads=\"lots\" is not a number; reporting the default instead.",
+                "Executor minSpareThreads=\"a few\" is not a number; reporting the default instead.",
+                "Connector port=\"eighty-eighty\" is not a number; reporting 8080 instead.",
+                "Connector maxThreads=\"many\" is not a number; reporting the default instead.",
+                "Connector connectionTimeout=\"soon\" is not a number; reporting the default instead.",
+                "Connector maxConnections=\"plenty\" is not a number; reporting the default instead.",
+                "Connector proxyPort=\"frontend\" is not a number; reporting no proxy port instead.");
+    }
+
+    @Test
+    void invalidNumbers_stillReportTheEffectiveDefaults() throws IOException {
+        ServerConfig cfg = parser.parse(fixture("server-invalid-numbers.xml"));
+        ConnectorConfig connector = cfg.getServices().get(0).getConnectors().get(0);
+
+        assertThat(cfg.getShutdownPort()).isEqualTo(8005);
+        assertThat(connector.getPort()).isEqualTo(8080);
+        assertThat(connector.getMaxThreads().isExplicit()).isFalse();
+    }
+
+    @Test
+    void validNumbers_produceNoWarnings() throws IOException {
+        assertThat(parser.parse(fixture("server-valid-basic.xml")).getWarnings()).isEmpty();
+    }
+
+    @Test
+    void warnings_doNotCarryOverBetweenParses() throws IOException {
+        parser.parse(fixture("server-invalid-numbers.xml"));
+
+        assertThat(parser.parse(fixture("server-valid-basic.xml")).getWarnings()).isEmpty();
+    }
+
+    @Test
+    void unresolvedPlaceholder_isReportedAsUnresolvedNotAsNonNumeric() throws IOException {
+        ServerConfig cfg = parser.parse(fixture("server-property-refs.xml"));
+
+        assertThat(cfg.getWarnings()).containsExactly(
+                "Connector port=\"${http.port}\" references a property that could not be resolved; "
+                        + "reporting 8080 instead.");
+    }
+
+    @Test
+    void vaultReference_isReportedAsResolvedAtStartup(@TempDir Path dir) throws IOException {
+        Path serverXml = dir.resolve("server.xml");
+        Files.writeString(serverXml, "<Server port=\"8005\"><Service name=\"Catalina\">"
+                + "<Connector port=\"${VAULT::http::port::}\"/>"
+                + "<Engine name=\"Catalina\" defaultHost=\"localhost\"><Host name=\"localhost\"/></Engine>"
+                + "</Service></Server>");
+
+        assertThat(parser.parse(serverXml).getWarnings()).containsExactly(
+                "Connector port=\"${VAULT::http::port::}\" is a vault reference that tomcat-vault "
+                        + "resolves at startup; reporting 8080 instead.");
+    }
 }

@@ -21,7 +21,7 @@ class MultiConfigJsonFormatterTest {
         String json = formatter.format(emptyReport());
 
         assertThat(json).contains("\"schemaVersion\"");
-        assertThat(json).contains("\"1.0\"");
+        assertThat(json).contains("\"" + org.jboss.jws.diag.common.SchemaVersions.CONFIG + "\"");
     }
 
     @Test

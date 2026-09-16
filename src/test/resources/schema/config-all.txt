@@ -1,6 +1,6 @@
 # JSON field paths for config-all, checked by JsonSchemaContractTest.
 # Regenerate: mvn test -Dtest=JsonSchemaContractTest -Djws.schema.update=true
-schemaVersion=1.0
+schemaVersion=1.1
 instanceCount
 instances
 instances[].catalinaBase
@@ -83,5 +83,6 @@ instances[].config.services[].executors[].threadPriority.value
 instances[].config.services[].name
 instances[].config.shutdownCommand
 instances[].config.shutdownPort
+instances[].config.warnings
 instances[].pid
 schemaVersion

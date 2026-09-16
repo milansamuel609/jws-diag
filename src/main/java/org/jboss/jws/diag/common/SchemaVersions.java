@@ -17,7 +17,8 @@ package org.jboss.jws.diag.common;
 public final class SchemaVersions {
 
     public static final String SUMMARY = "1.0";
-    public static final String CONFIG = "1.0";
+    // 1.1: added warnings for attributes server.xml sets to an unusable value.
+    public static final String CONFIG = "1.1";
     // 1.1: added validate --all output.
     public static final String VALIDATE = "1.1";
     public static final String DIFF = "1.0";

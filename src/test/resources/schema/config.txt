@@ -1,6 +1,6 @@
 # JSON field paths for config, checked by JsonSchemaContractTest.
 # Regenerate: mvn test -Dtest=JsonSchemaContractTest -Djws.schema.update=true
-schemaVersion=1.0
+schemaVersion=1.1
 listeners
 schemaVersion
 services
@@ -80,3 +80,4 @@ services[].executors[].threadPriority.value
 services[].name
 shutdownCommand
 shutdownPort
+warnings

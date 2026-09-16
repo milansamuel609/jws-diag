@@ -38,6 +38,12 @@ public class ConfigHumanFormatter {
 
     public String format(ServerConfig config) {
         StringBuilder sb = new StringBuilder();
+        for (String warning : config.getWarnings()) {
+            sb.append("WARNING: ").append(warning).append('\n');
+        }
+        if (!config.getWarnings().isEmpty()) {
+            sb.append('\n');
+        }
         List<ServiceConfig> services = config.getServices();
         boolean multiService = services.size() > 1;
 
