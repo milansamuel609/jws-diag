@@ -139,28 +139,109 @@ and automation to distinguish operator-set values from Tomcat defaults.
 
 ## CLI Reference
 
+Options go after the command name: `jws-diag config --format json`, not `jws-diag --format json config`.
+
 ### Global options
 
 | Option | Description |
 |--------|-------------|
-| `--help` | Show help and exit |
-| `--version` | Show version and exit |
-| `--format HUMAN\|JSON` | Output format (default: `HUMAN`) |
+| `-h`, `--help` | Show help and exit |
+| `-V`, `--version` | Show version and exit |
+
+### Output format
+
+Every command accepts:
+
+| Option | Description |
+|--------|-------------|
+| `-f`, `--format HUMAN\|JSON` | Output format (default: `HUMAN`). Values are case-insensitive, so `json` works. |
 
 JSON output carries a per-command `schemaVersion`. See [docs/json-output.md](docs/json-output.md) for what a version change means and how to consume the output safely.
 
-### `summary` options
+### `--all` and path options
+
+`summary`, `config`, `validate`, `diff` and `logs` accept `--all`, which scans `/proc` and reports on every running instance. Each instance's paths come from its own process, so `--all` cannot be combined with that command's path options (`--catalina-home`, `--catalina-base`, `--left`, `--right`, `--log-file`). The combination is rejected and exits `3`.
+
+### `summary`
+
+Show installed versions, JVM info, OS and container detection, and native library status.
 
 | Option | Description |
 |--------|-------------|
-| `--catalina-home <path>` | Override CATALINA_HOME discovery |
+| `--catalina-home <path>` | Path to CATALINA_HOME. Overrides auto-detection. |
+| `--catalina-base <path>` | Path to CATALINA_BASE. Defaults to CATALINA_HOME. |
+| `--all` | Report every running instance. |
 
-### `config` options
+### `config`
+
+Parse `server.xml` and show the effective connector, TLS, proxy and executor configuration, with each value marked `(explicit)` or `(default)`.
 
 | Option | Description |
 |--------|-------------|
-| `--catalina-home <path>` | Override CATALINA_HOME discovery |
-| `--catalina-base <path>` | Override CATALINA_BASE (defaults to CATALINA_HOME) |
+| `--catalina-home <path>` | Path to CATALINA_HOME. Overrides auto-detection. |
+| `--catalina-base <path>` | Path to CATALINA_BASE. Defaults to CATALINA_HOME. |
+| `--all` | Report every running instance. |
+
+### `validate`
+
+Run diagnostic rules against the configuration and report INFO, WARN and ERROR findings.
+
+| Option | Description |
+|--------|-------------|
+| `--catalina-base <path>` | Path to CATALINA_BASE. Defaults to the `CATALINA_BASE` environment variable. There is no auto-detection. |
+| `--all` | Validate every running instance. |
+
+### `diff`
+
+Compare the effective `server.xml` configuration of two installations.
+
+| Option | Description |
+|--------|-------------|
+| `--left <path>` | First CATALINA_BASE directory, or its `server.xml` |
+| `--right <path>` | Second CATALINA_BASE directory, or its `server.xml` |
+| `--all` | Compare every running instance against the one with the lowest PID. Needs at least two running instances. |
+
+Give either `--left` and `--right` together, or `--all`.
+
+### `logs`
+
+Scan a Tomcat log for known error patterns such as OutOfMemoryError, BindException and stuck threads.
+
+| Option | Description |
+|--------|-------------|
+| `--log-file <path>` | Log file to scan. Default: `CATALINA_BASE/logs/catalina.out`. |
+| `--catalina-home <path>` | Path to CATALINA_HOME. Overrides auto-detection. |
+| `--catalina-base <path>` | Path to CATALINA_BASE. Defaults to CATALINA_HOME. |
+| `--all` | Scan every running instance's log. |
+
+With `--all`, the log file is found per instance: `CATALINA_OUT` from that process's environment, then `logs/catalina.out`, then the newest `catalina.*.log`. An instance whose `CATALINA_OUT` points at a stream such as `/dev/stdout` is skipped with the reason.
+
+### `modcluster`
+
+Show the mod_cluster or mod_proxy_cluster listener configuration from `server.xml`. A `server.xml` without one is a normal result and exits `0`.
+
+| Option | Description |
+|--------|-------------|
+| `--catalina-home <path>` | Path to CATALINA_HOME |
+| `--catalina-base <path>` | Path to CATALINA_BASE. Defaults to CATALINA_HOME. |
+
+### `instances`
+
+List every running Tomcat or JWS instance found in `/proc`. Finding none is a normal result and exits `0`. There are no options besides `--format`.
+
+### `bundle`
+
+Write a redacted `.tar.gz` support bundle with configuration files, a version manifest and logs.
+
+| Option | Description |
+|--------|-------------|
+| `--catalina-base <path>` | Path to CATALINA_BASE. Defaults to the `CATALINA_BASE` environment variable. |
+| `--catalina-home <path>` | Path to CATALINA_HOME. Defaults to the `CATALINA_HOME` environment variable, then to CATALINA_BASE. |
+| `--output-dir <dir>` | Where to write the archive. Default: the current directory. |
+| `--staging-dir <dir>` | Where to assemble the bundle before archiving. Default: a temporary directory, removed afterwards. |
+| `--redaction-level DEFAULT\|STRICT` | `STRICT` also masks IP addresses, hostnames and environment variable values. Default: `DEFAULT`. |
+
+With `--format json`, `bundle` prints the absolute archive path and the number of files that could not be collected.
 
 ## Configuration Parsing Details
 
