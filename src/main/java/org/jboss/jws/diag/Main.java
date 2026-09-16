@@ -44,7 +44,11 @@ public class Main implements Runnable {
 
     /** The root command line, with picocli's error paths following {@link ExitCodes}. */
     static CommandLine commandLine() {
-        return withExitCodeContract(new CommandLine(new Main()));
+        CommandLine commandLine = new CommandLine(new Main());
+        // The docs, the examples and the design document all write --format json.
+        // Accept any casing rather than rejecting the spelling people type.
+        commandLine.setCaseInsensitiveEnumValuesAllowed(true);
+        return withExitCodeContract(commandLine);
     }
 
     /**
